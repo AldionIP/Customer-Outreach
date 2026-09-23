@@ -115,9 +115,9 @@ function Customers() {
           <option value="">All Status</option>
           <option value="new">New</option>
           <option value="contacted">Contacted</option>
-          <option value="follow_up">Follow Up</option>
+          <option value="follow-up">Follow Up</option>
           <option value="converted">Converted</option>
-          <option value="lost">Lost</option>
+          <option value="closed">Closed</option>
         </select>
       </div>
 
