@@ -3,6 +3,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const pool = require("./config/database");
+const customerRoutes = require("./routes/customerRoutes");
 
 const app = express();
 
@@ -43,6 +44,14 @@ app.get("/api/health/db", async (req, res) => {
     });
   }
 });
+
+/*
+|--------------------------------------------------------------------------
+| Customer Routes
+|--------------------------------------------------------------------------
+*/
+
+app.use("/api/customers", customerRoutes);
 
 /*
 |--------------------------------------------------------------------------
