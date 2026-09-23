@@ -4,6 +4,7 @@ require("dotenv").config();
 
 const pool = require("./config/database");
 const customerRoutes = require("./routes/customerRoutes");
+const followUpRoutes = require("./routes/followUpRoutes");
 
 const app = express();
 
@@ -52,6 +53,14 @@ app.get("/api/health/db", async (req, res) => {
 */
 
 app.use("/api/customers", customerRoutes);
+
+/*
+|--------------------------------------------------------------------------
+| Follow-up Routes
+|--------------------------------------------------------------------------
+*/
+
+app.use("/api/follow-ups", followUpRoutes);
 
 /*
 |--------------------------------------------------------------------------

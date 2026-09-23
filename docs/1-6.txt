@@ -1,0 +1,420 @@
+MILESTONE 1-6
+CUSTOMER FOLLOW-UP CRUD + FRONTEND UI
+
+1. TUJUAN
+
+Pada milestone ini dibuat fitur Follow-up untuk customer.
+
+Fitur yang selesai:
+- Create Follow-up
+- Read Follow-up
+- Update Follow-up
+- Delete Follow-up
+- Menampilkan Follow-up pada Customer Detail
+- Form tambah Follow-up
+- Edit Follow-up
+- Delete Follow-up
+
+Alur utama:
+
+User
+  ↓
+Frontend React
+  ↓
+followUpApi.js
+  ↓
+Backend Express
+  ↓
+followUpController.js
+  ↓
+followUpService.js
+  ↓
+PostgreSQL
+
+
+2. BACKEND
+
+Backend menggunakan REST API.
+
+Endpoint:
+
+POST
+/api/follow-ups
+
+GET
+/api/follow-ups/customer/:customerId
+
+GET
+/api/follow-ups/:id
+
+PUT
+/api/follow-ups/:id
+
+DELETE
+/api/follow-ups/:id
+
+
+2.1 CREATE
+
+POST digunakan untuk membuat Follow-up baru.
+
+Data yang dikirim:
+
+{
+  customerId,
+  note,
+  followUpDate
+}
+
+Controller menerima data dari:
+
+req.body
+
+Kemudian controller memanggil:
+
+followUpService.createFollowUp()
+
+
+2.2 READ
+
+GET berdasarkan customer:
+
+/api/follow-ups/customer/:customerId
+
+Digunakan untuk mengambil semua Follow-up milik satu customer.
+
+Service menggunakan:
+
+WHERE customer_id = $1
+
+Hasil diurutkan berdasarkan:
+
+ORDER BY created_at DESC
+
+
+2.3 UPDATE
+
+PUT digunakan untuk mengubah Follow-up.
+
+Endpoint:
+
+/api/follow-ups/:id
+
+Data yang dapat diubah:
+
+- note
+- followUpDate
+
+SQL menggunakan:
+
+UPDATE follow_ups
+SET
+  note = $1,
+  follow_up_date = $2,
+  updated_at = CURRENT_TIMESTAMP
+WHERE id = $3
+
+
+2.4 DELETE
+
+DELETE digunakan untuk menghapus Follow-up.
+
+Endpoint:
+
+/api/follow-ups/:id
+
+SQL:
+
+DELETE FROM follow_ups
+WHERE id = $1
+
+DELETE membutuhkan ID Follow-up.
+
+Customer ID tidak dapat digunakan untuk endpoint DELETE.
+
+Jika Follow-up tidak ditemukan, backend mengembalikan:
+
+404
+Follow-up not found
+
+
+3. FRONTEND
+
+Frontend menggunakan React.
+
+File baru:
+
+src/services/followUpApi.js
+
+File ini digunakan untuk menghubungkan React dengan API Follow-up.
+
+
+3.1 GET FOLLOW-UP
+
+Function:
+
+getFollowUpsByCustomerId(customerId)
+
+Function ini melakukan request:
+
+GET /api/follow-ups/customer/:customerId
+
+Hasil response digunakan untuk mengisi state:
+
+followUps
+
+
+3.2 CREATE FOLLOW-UP
+
+Function:
+
+createFollowUp()
+
+Mengirim data:
+
+{
+  customerId,
+  note,
+  followUpDate
+}
+
+Setelah berhasil, Follow-up baru ditambahkan ke state.
+
+
+3.3 UPDATE FOLLOW-UP
+
+Function:
+
+updateFollowUp()
+
+Menggunakan method:
+
+PUT
+
+Setelah berhasil, data Follow-up pada state diperbarui.
+
+
+3.4 DELETE FOLLOW-UP
+
+Function:
+
+deleteFollowUp()
+
+Menggunakan method:
+
+DELETE
+
+Setelah berhasil, Follow-up dihapus dari state menggunakan:
+
+filter()
+
+
+4. CUSTOMER DETAIL
+
+File:
+
+src/pages/CustomerDetail.jsx
+
+Halaman Customer Detail sekarang memiliki dua bagian utama:
+
+Customer Information
+Follow-ups
+
+
+5. STATE REACT
+
+Beberapa state baru:
+
+followUps
+
+Digunakan untuk menyimpan daftar Follow-up.
+
+note
+
+Menyimpan isi catatan Follow-up.
+
+followUpDate
+
+Menyimpan tanggal Follow-up.
+
+editingId
+
+Menyimpan ID Follow-up yang sedang diedit.
+
+followUpLoading
+
+Menentukan apakah data Follow-up sedang dimuat.
+
+followUpError
+
+Menyimpan error Follow-up.
+
+
+6. EDIT FLOW
+
+Ketika tombol Edit ditekan:
+
+Edit
+↓
+handleEditFollowUp()
+↓
+editingId diisi
+↓
+note dan followUpDate diisi data lama
+↓
+form berubah menjadi Update Follow-up
+↓
+PUT API
+↓
+state diperbarui
+
+
+7. DELETE FLOW
+
+Ketika tombol Delete ditekan:
+
+Delete
+↓
+window.confirm()
+↓
+deleteFollowUp(id)
+↓
+DELETE API
+↓
+Follow-up dihapus dari state
+
+
+8. KONSEP PENTING
+
+useState()
+
+Digunakan untuk menyimpan data yang dapat berubah.
+
+Contoh:
+
+const [note, setNote] = useState("");
+
+
+useEffect()
+
+Digunakan untuk menjalankan proses ketika halaman dimuat atau ID customer berubah.
+
+Contoh:
+
+useEffect(() => {
+  fetchData();
+}, [id]);
+
+
+map()
+
+Digunakan untuk menampilkan banyak Follow-up.
+
+Contoh:
+
+followUps.map((followUp) => (
+  ...
+))
+
+
+filter()
+
+Digunakan untuk menghapus item tertentu dari state.
+
+Contoh:
+
+setFollowUps((currentFollowUps) =>
+  currentFollowUps.filter(
+    (followUp) => followUp.id !== followUpId
+  )
+);
+
+
+async/await
+
+Digunakan untuk menjalankan request API secara asynchronous.
+
+Contoh:
+
+const data = await getCustomerById(id);
+
+
+9. DATABASE
+
+Tabel yang digunakan:
+
+follow_ups
+
+Kolom utama:
+
+id
+customer_id
+note
+follow_up_date
+created_at
+updated_at
+
+Relasi:
+
+customers
+   |
+   | customer_id
+   ↓
+follow_ups
+
+Satu customer dapat memiliki banyak Follow-up.
+
+
+10. HASIL MILESTONE
+
+Backend:
+- Create Follow-up ✓
+- Read Follow-up ✓
+- Update Follow-up ✓
+- Delete Follow-up ✓
+
+Frontend:
+- Menampilkan Follow-up ✓
+- Create Follow-up ✓
+- Edit Follow-up ✓
+- Delete Follow-up ✓
+
+Customer Detail sekarang dapat digunakan untuk melihat dan mengelola riwayat Follow-up customer.
+
+
+11. CONTOH ALUR
+
+Customer:
+
+Budi
+
+Follow-up:
+
+"Customer meminta dihubungi kembali minggu depan."
+
+Tanggal:
+
+2026-09-30
+
+Data tersebut disimpan ke database.
+
+Ketika Customer Detail dibuka:
+
+Customer Detail
+    ↓
+Get customer
+    ↓
+Get follow-ups
+    ↓
+Tampilkan Follow-up History
+
+
+12. KESIMPULAN
+
+Pada milestone 1-6, fitur Follow-up CRUD sudah terhubung penuh dari frontend sampai database.
+
+Frontend React berkomunikasi dengan backend Express melalui REST API.
+
+Backend memproses request melalui Controller dan Service, kemudian Service berkomunikasi dengan PostgreSQL.
+
+Dengan demikian Customer Outreach sekarang memiliki Customer CRUD dan Follow-up CRUD.
