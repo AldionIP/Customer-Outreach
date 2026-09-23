@@ -1,6 +1,11 @@
 const pool = require("../config/database");
 
-const getAllCustomers = async ({ search, status } = {}) => {
+const getAllCustomers = async ({
+  search,
+  status,
+  page = 1,
+  limit = 10,
+} = {}) => {
   const values = [];
   const conditions = [];
 
@@ -27,6 +32,21 @@ const getAllCustomers = async ({ search, status } = {}) => {
       ? `WHERE ${conditions.join(" AND ")}`
       : "";
 
+  const countResult = await pool.query(
+    `
+      SELECT COUNT(*) AS total
+      FROM customers
+      ${whereClause}
+    `,
+    values
+  );
+
+  const total = Number(countResult.rows[0].total);
+
+  const offset = (page - 1) * limit;
+
+  const dataValues = [...values, limit, offset];
+
   const result = await pool.query(
     `
       SELECT
@@ -41,11 +61,21 @@ const getAllCustomers = async ({ search, status } = {}) => {
       FROM customers
       ${whereClause}
       ORDER BY created_at DESC
+      LIMIT $${dataValues.length - 1}
+      OFFSET $${dataValues.length}
     `,
-    values
+    dataValues
   );
 
-  return result.rows;
+  return {
+    data: result.rows,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
 };
 
 const getCustomerById = async (id) => {

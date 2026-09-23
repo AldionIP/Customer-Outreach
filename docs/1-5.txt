@@ -1,0 +1,815 @@
+CUSTOMER OUTREACH / CUSTOMER FOLLOW-UP DASHBOARD
+MILESTONE 1-5
+CUSTOMER SEARCH, STATUS FILTER & PAGINATION
+
+
+==================================================
+1. TUJUAN MILESTONE
+==================================================
+
+Pada milestone ini ditambahkan tiga fitur pada halaman Customers:
+
+1. Search customer
+2. Filter customer berdasarkan status
+3. Pagination customer
+
+Ketiga fitur dibuat agar dapat digunakan secara bersamaan.
+
+Contoh:
+
+User mencari:
+    "budi"
+
+Kemudian memilih status:
+    "contacted"
+
+Kemudian membuka:
+    Page 1
+
+Backend akan menerima:
+
+GET /api/customers?search=budi&status=contacted&page=1&limit=10
+
+Dengan demikian frontend tidak perlu mengambil seluruh data customer sekaligus.
+
+
+==================================================
+2. FITUR SEARCH CUSTOMER
+==================================================
+
+Search digunakan untuk mencari customer berdasarkan:
+
+- name
+- phone
+- email
+
+Frontend mengirim parameter:
+
+search
+
+Contoh:
+
+GET /api/customers?search=budi
+
+Backend menggunakan PostgreSQL ILIKE.
+
+Contoh konsep:
+
+name ILIKE '%budi%'
+OR phone ILIKE '%budi%'
+OR email ILIKE '%budi%'
+
+ILIKE digunakan karena pencarian tidak membedakan huruf
+besar dan kecil.
+
+Contoh:
+
+Budi
+budi
+BUDI
+
+semuanya dapat ditemukan.
+
+
+==================================================
+3. FITUR STATUS FILTER
+==================================================
+
+Customer dapat difilter berdasarkan status.
+
+Status yang tersedia:
+
+- new
+- contacted
+- follow_up
+- converted
+- lost
+
+Frontend mengirim:
+
+status
+
+Contoh:
+
+GET /api/customers?status=contacted
+
+Backend kemudian menggunakan:
+
+status = $1
+
+Parameterized query digunakan agar nilai dari user tidak
+langsung dimasukkan ke SQL.
+
+
+==================================================
+4. SEARCH + STATUS FILTER
+==================================================
+
+Search dan status dapat digunakan secara bersamaan.
+
+Contoh:
+
+GET /api/customers?search=budi&status=contacted
+
+Artinya:
+
+Cari customer yang:
+1. Nama / nomor telepon / email mengandung "budi"
+2. Status customer adalah "contacted"
+
+
+Backend menggunakan kondisi:
+
+WHERE
+(
+    name ILIKE $1
+    OR phone ILIKE $1
+    OR email ILIKE $1
+)
+AND status = $2
+
+
+==================================================
+5. PAGINATION
+==================================================
+
+Pagination digunakan agar data customer tidak ditampilkan
+semuanya sekaligus.
+
+Pagination menggunakan:
+
+page
+limit
+
+Contoh:
+
+GET /api/customers?page=1&limit=10
+
+Artinya:
+
+- page = halaman pertama
+- limit = maksimal 10 customer per halaman
+
+
+Halaman kedua:
+
+GET /api/customers?page=2&limit=10
+
+
+==================================================
+6. LIMIT DAN OFFSET
+==================================================
+
+PostgreSQL menggunakan LIMIT dan OFFSET untuk pagination.
+
+Rumus OFFSET:
+
+(page - 1) * limit
+
+Contoh:
+
+page = 1
+limit = 10
+
+OFFSET = (1 - 1) * 10
+OFFSET = 0
+
+
+Page 2:
+
+OFFSET = (2 - 1) * 10
+OFFSET = 10
+
+
+Page 3:
+
+OFFSET = (3 - 1) * 10
+OFFSET = 20
+
+
+Dengan demikian:
+
+Page 1:
+customer 1 - 10
+
+Page 2:
+customer 11 - 20
+
+Page 3:
+customer 21 - 30
+
+
+==================================================
+7. MENGHITUNG TOTAL DATA
+==================================================
+
+Backend perlu mengetahui jumlah seluruh customer yang
+sesuai dengan filter.
+
+Digunakan:
+
+SELECT COUNT(*) AS total
+FROM customers
+WHERE ...
+
+
+Contoh jika terdapat 25 customer:
+
+total = 25
+
+Jika:
+
+limit = 10
+
+Maka:
+
+totalPages = Math.ceil(25 / 10)
+totalPages = 3
+
+
+Sehingga frontend mengetahui bahwa terdapat 3 halaman.
+
+
+==================================================
+8. RESPONSE API
+==================================================
+
+Response endpoint GET /api/customers sekarang memiliki
+bentuk:
+
+{
+    "data": [
+        ...
+    ],
+    "pagination": {
+        "page": 1,
+        "limit": 10,
+        "total": 25,
+        "totalPages": 3
+    }
+}
+
+Bagian "data" berisi customer pada halaman yang sedang
+dibuka.
+
+Bagian "pagination" berisi informasi pagination.
+
+
+==================================================
+9. PERUBAHAN BACKEND
+==================================================
+
+File:
+
+backend/src/controllers/customerController.js
+
+Controller sekarang membaca:
+
+- search
+- status
+- page
+- limit
+
+Kemudian melakukan validasi terhadap page dan limit.
+
+Page harus berupa positive integer.
+
+Contoh valid:
+
+page=1
+page=2
+page=3
+
+
+Limit dibatasi antara:
+
+1 sampai 100
+
+
+Tujuannya agar user tidak mengirim limit yang terlalu besar
+dan mengambil terlalu banyak data.
+
+
+==================================================
+
+10. PERUBAHAN SERVICE BACKEND
+==================================================
+
+File:
+
+backend/src/services/customerService.js
+
+Function:
+
+getAllCustomers()
+
+sekarang menerima:
+
+{
+    search,
+    status,
+    page,
+    limit
+}
+
+
+Alurnya:
+
+1. Membuat conditions berdasarkan search dan status.
+2. Menghitung jumlah data menggunakan COUNT(*).
+3. Menghitung OFFSET.
+4. Mengambil data menggunakan LIMIT dan OFFSET.
+5. Mengembalikan data beserta informasi pagination.
+
+
+Contoh:
+
+const offset = (page - 1) * limit;
+
+
+Kemudian:
+
+SELECT ...
+FROM customers
+WHERE ...
+ORDER BY created_at DESC
+LIMIT ...
+OFFSET ...
+
+
+ORDER BY created_at DESC digunakan agar customer terbaru
+tetap muncul terlebih dahulu.
+
+
+==================================================
+11. PERUBAHAN FRONTEND API
+==================================================
+
+File:
+
+frontend/src/services/customerApi.js
+
+Function:
+
+getCustomers()
+
+sekarang menerima:
+
+{
+    search,
+    status,
+    page,
+    limit
+}
+
+
+Kemudian Axios mengirim parameter:
+
+params: {
+    search,
+    status,
+    page,
+    limit
+}
+
+
+Contoh request:
+
+getCustomers({
+    search: "budi",
+    status: "contacted",
+    page: 1,
+    limit: 10
+})
+
+
+Axios akan menghasilkan request seperti:
+
+/api/customers?search=budi&status=contacted&page=1&limit=10
+
+
+Function sekarang mengembalikan:
+
+response.data
+
+karena response API sudah berisi:
+
+{
+    data,
+    pagination
+}
+
+
+==================================================
+12. PERUBAHAN FRONTEND CUSTOMERS
+==================================================
+
+File:
+
+frontend/src/pages/Customers.jsx
+
+Ditambahkan state:
+
+const [page, setPage] = useState(1);
+
+
+Untuk menyimpan informasi pagination digunakan:
+
+const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+});
+
+
+Ketika data berhasil diambil:
+
+setCustomers(result.data);
+setPagination(result.pagination);
+
+
+==================================================
+13. useEffect PAGINATION
+==================================================
+
+useEffect sekarang bergantung kepada:
+
+[
+    search,
+    status,
+    page
+]
+
+
+Artinya API akan dipanggil kembali ketika:
+
+- search berubah
+- status berubah
+- page berubah
+
+
+Contoh:
+
+User berada di page 2.
+
+Kemudian menekan Next.
+
+page berubah:
+
+2 -> 3
+
+useEffect berjalan kembali dan mengambil data page 3.
+
+
+==================================================
+14. RESET PAGE KETIKA SEARCH / FILTER BERUBAH
+==================================================
+
+Ketika user melakukan search:
+
+setSearch(event.target.value);
+setPage(1);
+
+
+Ketika user mengubah status:
+
+setStatus(event.target.value);
+setPage(1);
+
+
+Hal ini penting.
+
+Contoh:
+
+User sedang berada di:
+
+Page 5
+
+
+Kemudian user melakukan search baru.
+
+Jika page tidak dikembalikan ke 1, bisa saja hasil search
+hanya memiliki 1 halaman tetapi frontend masih meminta
+page 5.
+
+Karena itu setiap search atau perubahan filter akan
+mengembalikan pagination ke page 1.
+
+
+==================================================
+15. TOMBOL PREVIOUS
+==================================================
+
+Function:
+
+handlePreviousPage()
+
+
+Digunakan untuk kembali ke halaman sebelumnya.
+
+Contoh:
+
+Page 3
+    ↓
+Page 2
+
+
+Tetapi page tidak boleh kurang dari 1.
+
+Karena itu digunakan pengecekan:
+
+if (page > 1) {
+    setPage(page - 1);
+}
+
+
+==================================================
+16. TOMBOL NEXT
+==================================================
+
+Function:
+
+handleNextPage()
+
+
+Digunakan untuk menuju halaman berikutnya.
+
+Contoh:
+
+Page 1
+    ↓
+Page 2
+
+
+Tetapi page tidak boleh melewati totalPages.
+
+Karena itu:
+
+if (page < pagination.totalPages) {
+    setPage(page + 1);
+}
+
+
+==================================================
+17. DISABLE BUTTON
+==================================================
+
+Previous akan disabled ketika:
+
+page === 1
+
+
+Next akan disabled ketika:
+
+page === pagination.totalPages
+
+
+Contoh:
+
+Page 1 dari 3
+
+Previous:
+DISABLED
+
+Next:
+ACTIVE
+
+
+Page 3 dari 3
+
+Previous:
+ACTIVE
+
+Next:
+DISABLED
+
+
+==================================================
+18. ALUR FRONTEND -> BACKEND -> DATABASE
+==================================================
+
+Contoh user mencari:
+
+budi
+
+dengan status:
+
+contacted
+
+dan berada di:
+
+page 1
+
+
+Frontend:
+
+Customers.jsx
+      |
+      v
+getCustomers()
+      |
+      v
+customerApi.js
+      |
+      v
+GET /api/customers
+?search=budi
+&status=contacted
+&page=1
+&limit=10
+
+
+Backend:
+
+customerRoutes.js
+      |
+      v
+customerController.js
+      |
+      v
+customerService.js
+      |
+      v
+PostgreSQL
+
+
+Database melakukan:
+
+1. COUNT(*) untuk mengetahui total.
+2. SELECT customer berdasarkan filter.
+3. LIMIT 10.
+4. OFFSET 0.
+
+
+Database mengembalikan data.
+
+Backend mengirim:
+
+{
+    data: [...],
+    pagination: {
+        page: 1,
+        limit: 10,
+        total: ...,
+        totalPages: ...
+    }
+}
+
+
+Frontend menerima response.
+
+Customers.jsx kemudian:
+
+setCustomers(result.data);
+setPagination(result.pagination);
+
+
+React melakukan render ulang.
+
+Customer yang sesuai akan ditampilkan.
+
+
+==================================================
+19. CONTOH SEDERHANA
+==================================================
+
+Misalnya terdapat 25 customer.
+
+limit = 10
+
+
+Page 1:
+
+Customer 1
+Customer 2
+...
+Customer 10
+
+
+Page 2:
+
+Customer 11
+Customer 12
+...
+Customer 20
+
+
+Page 3:
+
+Customer 21
+Customer 22
+...
+Customer 25
+
+
+pagination:
+
+{
+    page: 3,
+    limit: 10,
+    total: 25,
+    totalPages: 3
+}
+
+
+==================================================
+20. TESTING
+==================================================
+
+Backend telah diuji menggunakan endpoint:
+
+GET /api/customers
+
+GET /api/customers?search=budi
+
+GET /api/customers?status=new
+
+GET /api/customers?status=contacted
+
+GET /api/customers?search=budi&status=contacted
+
+
+Hasil search dan status filter sesuai dengan data database.
+
+
+Pagination menggunakan:
+
+GET /api/customers?page=1&limit=10
+
+GET /api/customers?page=2&limit=10
+
+
+Frontend kemudian menggabungkan:
+
+Search
++
+Status Filter
++
+Pagination
+
+
+Sehingga ketiga fitur dapat digunakan secara bersamaan.
+
+
+==================================================
+21. KONSEP YANG DIPELAJARI
+==================================================
+
+Pada milestone ini dipelajari:
+
+1. Query parameter
+2. Search menggunakan ILIKE
+3. Multiple SQL conditions
+4. Parameterized query
+5. COUNT(*)
+6. LIMIT
+7. OFFSET
+8. Pagination
+9. Math.ceil()
+10. React useState()
+11. React useEffect()
+12. State dependency
+13. Reset state
+14. Conditional rendering
+15. Disabled button
+16. Alur frontend -> API -> backend -> database
+
+
+==================================================
+22. FILE YANG DIUBAH
+==================================================
+
+backend/src/controllers/customerController.js
+
+backend/src/services/customerService.js
+
+frontend/src/pages/Customers.jsx
+
+frontend/src/services/customerApi.js
+
+
+==================================================
+23. HASIL AKHIR MILESTONE
+==================================================
+
+Customer Dashboard sekarang sudah memiliki:
+
+[✓] Customer listing
+[✓] Create customer
+[✓] Read customer
+[✓] Update customer
+[✓] Delete customer
+[✓] Search customer
+[✓] Filter berdasarkan status
+[✓] Pagination
+[✓] Search + filter + pagination secara bersamaan
+
+
+Next development dapat dilanjutkan ke fitur berikutnya
+tanpa mengulang implementasi search, filter, dan pagination.
+
+
+==================================================
+END OF MILESTONE 1-5
+==================================================

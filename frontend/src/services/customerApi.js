@@ -5,15 +5,19 @@ const API_URL = "http://localhost:5000/api/customers";
 export const getCustomers = async ({
   search = "",
   status = "",
+  page = 1,
+  limit = 10,
 } = {}) => {
   const response = await axios.get(API_URL, {
     params: {
       search,
       status,
+      page,
+      limit,
     },
   });
 
-  return response.data.data;
+  return response.data;
 };
 
 export const getCustomerById = async (id) => {

@@ -10,6 +10,15 @@ function Customers() {
   const [customers, setCustomers] = useState([]);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
+
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+  });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -19,12 +28,15 @@ function Customers() {
       setError("");
 
       try {
-        const data = await getCustomers({
+        const result = await getCustomers({
           search,
           status,
+          page,
+          limit: 10,
         });
 
-        setCustomers(data);
+        setCustomers(result.data);
+        setPagination(result.pagination);
       } catch (error) {
         console.error(
           "Failed to fetch customers:",
@@ -38,7 +50,7 @@ function Customers() {
     };
 
     fetchCustomers();
-  }, [search, status]);
+  }, [search, status, page]);
 
   const handleDelete = (customerId) => {
     setCustomers((previousCustomers) =>
@@ -50,10 +62,24 @@ function Customers() {
 
   const handleSearchChange = (event) => {
     setSearch(event.target.value);
+    setPage(1);
   };
 
   const handleStatusChange = (event) => {
     setStatus(event.target.value);
+    setPage(1);
+  };
+
+  const handlePreviousPage = () => {
+    if (page > 1) {
+      setPage(page - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (page < pagination.totalPages) {
+      setPage(page + 1);
+    }
   };
 
   return (
@@ -118,15 +144,44 @@ function Customers() {
       {!loading &&
         !error &&
         customers.length > 0 && (
-          <div className="customer-grid">
-            {customers.map((customer) => (
-              <CustomerCard
-                key={customer.id}
-                customer={customer}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
+          <>
+            <div className="customer-grid">
+              {customers.map((customer) => (
+                <CustomerCard
+                  key={customer.id}
+                  customer={customer}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+
+            {pagination.totalPages > 1 && (
+              <div className="pagination">
+                <button
+                  className="secondary-button"
+                  onClick={handlePreviousPage}
+                  disabled={page === 1}
+                >
+                  Previous
+                </button>
+
+                <span>
+                  Page {page} of{" "}
+                  {pagination.totalPages}
+                </span>
+
+                <button
+                  className="secondary-button"
+                  onClick={handleNextPage}
+                  disabled={
+                    page === pagination.totalPages
+                  }
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         )}
     </div>
   );

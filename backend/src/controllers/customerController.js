@@ -2,16 +2,44 @@ const customerService = require("../services/customerService");
 
 const getCustomers = async (req, res) => {
   try {
-    const { search, status } = req.query;
-
-    const customers = await customerService.getAllCustomers({
+    const {
       search,
       status,
-    });
+      page = 1,
+      limit = 10,
+    } = req.query;
 
-    res.status(200).json({
-      data: customers,
-    });
+    const parsedPage = Number(page);
+    const parsedLimit = Number(limit);
+
+    if (
+      !Number.isInteger(parsedPage) ||
+      parsedPage < 1
+    ) {
+      return res.status(400).json({
+        message: "Page must be a positive integer",
+      });
+    }
+
+    if (
+      !Number.isInteger(parsedLimit) ||
+      parsedLimit < 1 ||
+      parsedLimit > 100
+    ) {
+      return res.status(400).json({
+        message: "Limit must be between 1 and 100",
+      });
+    }
+
+    const result =
+      await customerService.getAllCustomers({
+        search,
+        status,
+        page: parsedPage,
+        limit: parsedLimit,
+      });
+
+    res.status(200).json(result);
   } catch (error) {
     console.error("Get customers error:", error);
 
@@ -25,7 +53,8 @@ const getCustomerById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const customer = await customerService.getCustomerById(id);
+    const customer =
+      await customerService.getCustomerById(id);
 
     if (!customer) {
       return res.status(404).json({
@@ -60,12 +89,13 @@ const createCustomer = async (req, res) => {
       });
     }
 
-    const customer = await customerService.createCustomer({
-      name,
-      phone,
-      email,
-      address,
-    });
+    const customer =
+      await customerService.createCustomer({
+        name,
+        phone,
+        email,
+        address,
+      });
 
     res.status(201).json({
       message: "Customer created successfully",
@@ -98,13 +128,14 @@ const updateCustomer = async (req, res) => {
       });
     }
 
-    const customer = await customerService.updateCustomer(id, {
-      name,
-      phone,
-      email,
-      address,
-      status: status || "new",
-    });
+    const customer =
+      await customerService.updateCustomer(id, {
+        name,
+        phone,
+        email,
+        address,
+        status: status || "new",
+      });
 
     if (!customer) {
       return res.status(404).json({
