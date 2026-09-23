@@ -1,31 +1,52 @@
 import { useEffect, useState } from "react";
 
 import { getCustomers } from "../services/customerApi";
+import { getFollowUpsByCustomerId } from "../services/followUpApi";
 
 function Dashboard() {
   const [customers, setCustomers] = useState([]);
+  const [followUps, setFollowUps] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchCustomers = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const data = await getCustomers();
+        const customerResult = await getCustomers({
+          page: 1,
+          limit: 100,
+        });
 
-        setCustomers(data);
+        const customerData = customerResult.data || [];
+
+        setCustomers(customerData);
+
+        const followUpResults = await Promise.all(
+          customerData.map((customer) =>
+            getFollowUpsByCustomerId(customer.id)
+          )
+        );
+
+        const allFollowUps =
+          followUpResults.flat();
+
+        setFollowUps(allFollowUps);
       } catch (error) {
         console.error(
-          "Failed to fetch customers:",
+          "Failed to fetch dashboard data:",
           error
         );
 
-        setError("Failed to load dashboard data.");
+        setError(
+          "Failed to load dashboard data."
+        );
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCustomers();
+    fetchDashboardData();
   }, []);
 
   const totalCustomers = customers.length;
@@ -54,6 +75,16 @@ function Dashboard() {
     (customer) =>
       customer.status === "closed"
   ).length;
+
+  const totalFollowUps = followUps.length;
+
+  const recentFollowUps = [...followUps]
+    .sort(
+      (a, b) =>
+        new Date(b.created_at) -
+        new Date(a.created_at)
+    )
+    .slice(0, 5);
 
   if (loading) {
     return (
@@ -147,6 +178,46 @@ function Dashboard() {
             {closedCustomers}
           </strong>
         </div>
+
+        <div className="dashboard-card">
+          <span className="dashboard-card-label">
+            Total Follow-ups
+          </span>
+
+          <strong className="dashboard-card-value">
+            {totalFollowUps}
+          </strong>
+        </div>
+      </div>
+
+      <div className="customer-list">
+        <h2>Recent Follow-ups</h2>
+
+        {recentFollowUps.length === 0 ? (
+          <p>No follow-ups yet.</p>
+        ) : (
+          recentFollowUps.map((followUp) => (
+            <div
+              key={followUp.id}
+              className="detail-item"
+            >
+              <div>
+                <strong>
+                  {followUp.note}
+                </strong>
+
+                <p>
+                  Follow-up date:{" "}
+                  {followUp.follow_up_date
+                    ? new Date(
+                        followUp.follow_up_date
+                      ).toLocaleDateString()
+                    : "-"}
+                </p>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
