@@ -1,0 +1,563 @@
+CUSTOMER OUTREACH — MILESTONE 1-1
+FOUNDATION BACKEND & DATABASE CONNECTION
+==================================================
+
+1. TUJUAN
+--------------------------------------------------
+Pada tahap ini kita membuat fondasi awal aplikasi
+Customer Outreach / Customer Follow-up Dashboard.
+
+Yang dibuat:
+
+- Backend menggunakan Node.js dan Express
+- CORS untuk komunikasi dengan frontend
+- dotenv untuk membaca environment variable
+- PostgreSQL sebagai database
+- pg sebagai PostgreSQL client untuk Node.js
+- Database connection pool
+- Tabel customers
+- Endpoint untuk mengecek koneksi database
+
+
+2. STRUKTUR PROJECT
+--------------------------------------------------
+
+Customer-Outreach/
+│
+├── README.md
+│
+├── backend/
+│   ├── .env
+│   ├── .gitignore
+│   ├── package.json
+│   │
+│   └── src/
+│       ├── app.js
+│       │
+│       ├── config/
+│       │   └── database.js
+│       │
+│       ├── controllers/
+│       │
+│       ├── routes/
+│       │
+│       └── services/
+│
+└── docs/
+    └── 1-1.txt
+
+
+3. TEKNOLOGI
+--------------------------------------------------
+
+Node.js
+Digunakan untuk menjalankan JavaScript di sisi server.
+
+Express
+Digunakan untuk membuat HTTP server dan REST API.
+
+PostgreSQL
+Digunakan sebagai relational database.
+
+pg
+Digunakan agar Node.js dapat berkomunikasi dengan
+PostgreSQL.
+
+dotenv
+Digunakan untuk membaca konfigurasi dari file .env.
+
+cors
+Digunakan agar frontend dari origin berbeda dapat
+berkomunikasi dengan backend.
+
+
+4. PACKAGE.JSON
+--------------------------------------------------
+
+Bagian scripts:
+
+"scripts": {
+  "start": "node src/app.js",
+  "dev": "nodemon src/app.js"
+}
+
+npm run start
+Menjalankan server menggunakan Node.js.
+
+npm run dev
+Menjalankan server menggunakan nodemon.
+
+Nodemon akan me-restart server ketika file berubah.
+
+
+5. APP.JS
+--------------------------------------------------
+
+Kode:
+
+const express = require("express");
+const cors = require("cors");
+require("dotenv").config();
+
+const pool = require("./config/database");
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+
+PENJELASAN:
+
+require("express")
+Mengambil library Express.
+
+require("cors")
+Mengambil middleware CORS.
+
+require("dotenv").config()
+Membaca file .env sehingga environment variable
+dapat digunakan melalui process.env.
+
+Contoh:
+
+process.env.PORT
+
+
+app.use(cors())
+Mengaktifkan CORS.
+
+app.use(express.json())
+Membuat Express dapat membaca request dengan format JSON.
+
+
+6. EXPRESS APPLICATION
+--------------------------------------------------
+
+const app = express();
+
+Baris ini membuat instance aplikasi Express.
+
+Secara sederhana:
+
+Express
+   ↓
+app
+   ↓
+routes / middleware
+   ↓
+response
+
+
+7. ROOT ENDPOINT
+--------------------------------------------------
+
+Kode:
+
+app.get("/", (req, res) => {
+  res.json({
+    message: "Customer Outreach API is running",
+  });
+});
+
+
+GET
+Digunakan untuk mengambil data.
+
+"/"
+Merupakan URL endpoint.
+
+req
+Berisi request dari client.
+
+res
+Digunakan server untuk mengirim response.
+
+res.json()
+Mengirim response dalam format JSON.
+
+
+Jika browser membuka:
+
+http://localhost:5000/
+
+Server memberikan:
+
+{
+  "message": "Customer Outreach API is running"
+}
+
+
+8. DATABASE CONFIGURATION
+--------------------------------------------------
+
+File:
+
+src/config/database.js
+
+Kode:
+
+const { Pool } = require("pg");
+
+const pool = new Pool({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+});
+
+module.exports = pool;
+
+
+Pool digunakan untuk mengelola koneksi database.
+
+Daripada aplikasi membuat koneksi PostgreSQL baru
+setiap kali melakukan query, Pool dapat mengelola
+beberapa koneksi yang dapat digunakan kembali.
+
+
+9. ENVIRONMENT VARIABLE
+--------------------------------------------------
+
+File:
+
+.env
+
+Contoh:
+
+PORT=5000
+
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=customer_outreach
+DB_USER=postgres
+DB_PASSWORD=...
+
+
+Informasi database diletakkan di .env agar tidak
+ditulis langsung di source code.
+
+File .env dimasukkan ke .gitignore.
+
+Tujuannya adalah mencegah password database masuk
+ke Git repository.
+
+
+10. DATABASE
+--------------------------------------------------
+
+Database:
+
+customer_outreach
+
+
+Tabel:
+
+customers
+
+
+SQL:
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+CREATE TABLE customers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    email VARCHAR(100),
+    address TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'new',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
+11. PRIMARY KEY
+--------------------------------------------------
+
+id UUID PRIMARY KEY
+
+Primary Key adalah identitas unik setiap record.
+
+Contoh:
+
+Customer A
+id = 550e8400-e29b-41d4-a716-446655440000
+
+Customer B
+id = 6ba7b810-9dad-11d1-80b4-00c04fd430c8
+
+Keduanya mempunyai ID berbeda.
+
+
+12. UUID
+--------------------------------------------------
+
+UUID adalah identifier yang dibuat dengan format unik.
+
+Kita menggunakan UUID untuk ID customer.
+
+Keuntungan:
+
+- sulit ditebak
+- cocok untuk identifier
+- kemungkinan collision sangat kecil
+
+
+13. NOT NULL
+--------------------------------------------------
+
+Contoh:
+
+name VARCHAR(100) NOT NULL
+
+Artinya nama customer wajib memiliki nilai.
+
+Database tidak menerima:
+
+name = NULL
+
+
+14. VARCHAR
+--------------------------------------------------
+
+Contoh:
+
+name VARCHAR(100)
+
+VARCHAR digunakan untuk data berbentuk teks dengan
+panjang maksimum tertentu.
+
+Untuk nomor telepon kita juga menggunakan VARCHAR.
+
+Contoh:
+
+08123456789
+
+Nomor telepon bukan angka untuk perhitungan matematika,
+sehingga lebih tepat disimpan sebagai string.
+
+
+15. TEXT
+--------------------------------------------------
+
+address TEXT
+
+TEXT digunakan untuk data teks yang panjangnya dapat
+lebih fleksibel.
+
+Alamat customer dapat mempunyai panjang yang berbeda.
+
+
+16. DEFAULT
+--------------------------------------------------
+
+status VARCHAR(20) NOT NULL DEFAULT 'new'
+
+Jika status tidak diberikan ketika customer dibuat,
+database otomatis menggunakan:
+
+new
+
+
+created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+Database otomatis mencatat waktu ketika data dibuat.
+
+
+17. STATUS CUSTOMER
+--------------------------------------------------
+
+Untuk tahap awal status:
+
+new
+
+Nantinya status dapat berkembang menjadi:
+
+new
+contacted
+follow_up
+interested
+not_interested
+converted
+
+Status akan digunakan untuk membantu proses customer
+outreach dan follow-up.
+
+
+18. DATABASE HEALTH CHECK
+--------------------------------------------------
+
+Endpoint:
+
+GET /api/health/db
+
+
+Kode:
+
+app.get("/api/health/db", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW()");
+
+    res.status(200).json({
+      message: "Database connection successful",
+      time: result.rows[0].now,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Database connection failed",
+    });
+  }
+});
+
+
+19. ASYNC / AWAIT
+--------------------------------------------------
+
+Database membutuhkan waktu untuk memberikan response.
+
+Karena itu kita menggunakan:
+
+async
+
+dan:
+
+await
+
+
+Contoh:
+
+const result = await pool.query("SELECT NOW()");
+
+
+await berarti JavaScript menunggu query selesai sebelum
+melanjutkan ke proses berikutnya.
+
+
+20. TRY / CATCH
+--------------------------------------------------
+
+try digunakan untuk menjalankan proses yang mungkin
+menghasilkan error.
+
+catch digunakan untuk menangani error tersebut.
+
+Contoh:
+
+try {
+    // query database
+} catch (error) {
+    // menangani error
+}
+
+
+Dengan demikian server tidak langsung berhenti ketika
+database mengalami error.
+
+
+21. HTTP STATUS
+--------------------------------------------------
+
+Jika database berhasil:
+
+res.status(200)
+
+200 berarti request berhasil.
+
+Jika database gagal:
+
+res.status(500)
+
+500 menunjukkan terjadi masalah pada server.
+
+
+22. ALUR SISTEM
+--------------------------------------------------
+
+Saat user membuka:
+
+GET /api/health/db
+
+
+Alurnya:
+
+Browser
+   ↓
+HTTP Request
+   ↓
+Express
+   ↓
+Route /api/health/db
+   ↓
+pool.query()
+   ↓
+PostgreSQL
+   ↓
+SELECT NOW()
+   ↓
+Database mengembalikan hasil
+   ↓
+Express
+   ↓
+JSON Response
+   ↓
+Browser
+
+
+23. KONSEP YANG DIPELAJARI
+--------------------------------------------------
+
+Pada checkpoint ini kita mempelajari:
+
+1. Node.js
+2. Express
+3. Middleware
+4. CORS
+5. Environment variable
+6. PostgreSQL
+7. pg
+8. Connection Pool
+9. Database
+10. Table
+11. Primary Key
+12. UUID
+13. VARCHAR
+14. TEXT
+15. NOT NULL
+16. DEFAULT
+17. Timestamp
+18. REST endpoint
+19. HTTP GET
+20. JSON response
+21. async/await
+22. try/catch
+23. HTTP status code
+
+
+24. HASIL AKHIR
+--------------------------------------------------
+
+Backend berhasil berjalan pada:
+
+http://localhost:5000/
+
+
+Database health check:
+
+http://localhost:5000/api/health/db
+
+
+Database:
+
+customer_outreach
+
+
+Table:
+
+customers
+
+
+Checkpoint 1-1 selesai.
