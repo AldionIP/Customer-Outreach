@@ -1,3 +1,4 @@
+import { getOutreachStatusLabel } from "../constants/outreachStatus";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -38,7 +39,7 @@ function CustomerCard({ customer, onDelete }) {
         <h3>{customer.name}</h3>
 
         <span className="customer-status">
-          {customer.status || "new"}
+          {getOutreachStatusLabel(customer.status)}
         </span>
       </div>
 

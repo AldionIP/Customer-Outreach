@@ -1,11 +1,21 @@
 import { useEffect, useState } from "react";
 
-import { getCustomers } from "../services/customerApi";
-import { getFollowUpsByCustomerId } from "../services/followUpApi";
+const API_URL = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}`;
 
 function Dashboard() {
-  const [customers, setCustomers] = useState([]);
-  const [followUps, setFollowUps] = useState([]);
+  const [dashboard, setDashboard] = useState({
+    totalCustomers: 0,
+    followCustomers: 0,
+    contactedCustomers: 0,
+    surveyCustomers: 0,
+    topupCustomers: 0,
+    totalFollowUps: 0,
+    upcomingFollowUps: 0,
+    overdueFollowUps: 0,
+    recentFollowUps: [],
+    upcomingFollowUpItems: [],
+    overdueFollowUpItems: [],
+  });
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -13,25 +23,27 @@ function Dashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const customerResult = await getCustomers({
-          page: 1,
-          limit: 100,
+        const response = await fetch(`${API_URL}/api/dashboard`);
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch dashboard data");
+        }
+
+        const result = await response.json();
+
+        setDashboard({
+          totalCustomers: result.totalCustomers || 0,
+          followCustomers: result.followCustomers || 0,
+          contactedCustomers: result.contactedCustomers || 0,
+          surveyCustomers: result.surveyCustomers || 0,
+          topupCustomers: result.topupCustomers || 0,
+          totalFollowUps: result.totalFollowUps || 0,
+          upcomingFollowUps: result.upcomingFollowUps || 0,
+          overdueFollowUps: result.overdueFollowUps || 0,
+          recentFollowUps: result.recentFollowUps || [],
+          upcomingFollowUpItems: result.upcomingFollowUpItems || [],
+          overdueFollowUpItems: result.overdueFollowUpItems || [],
         });
-
-        const customerData = customerResult.data || [];
-
-        setCustomers(customerData);
-
-        const followUpResults = await Promise.all(
-          customerData.map((customer) =>
-            getFollowUpsByCustomerId(customer.id)
-          )
-        );
-
-        const allFollowUps =
-          followUpResults.flat();
-
-        setFollowUps(allFollowUps);
       } catch (error) {
         console.error(
           "Failed to fetch dashboard data:",
@@ -49,42 +61,19 @@ function Dashboard() {
     fetchDashboardData();
   }, []);
 
-  const totalCustomers = customers.length;
-
-  const newCustomers = customers.filter(
-    (customer) =>
-      (customer.status || "new") === "new"
-  ).length;
-
-  const contactedCustomers = customers.filter(
-    (customer) =>
-      customer.status === "contacted"
-  ).length;
-
-  const followUpCustomers = customers.filter(
-    (customer) =>
-      customer.status === "follow-up"
-  ).length;
-
-  const convertedCustomers = customers.filter(
-    (customer) =>
-      customer.status === "converted"
-  ).length;
-
-  const closedCustomers = customers.filter(
-    (customer) =>
-      customer.status === "closed"
-  ).length;
-
-  const totalFollowUps = followUps.length;
-
-  const recentFollowUps = [...followUps]
-    .sort(
-      (a, b) =>
-        new Date(b.created_at) -
-        new Date(a.created_at)
-    )
-    .slice(0, 5);
+  const {
+    totalCustomers,
+    followCustomers,
+    contactedCustomers,
+    surveyCustomers,
+    topupCustomers,
+    totalFollowUps,
+    upcomingFollowUps,
+    overdueFollowUps,
+    recentFollowUps,
+    upcomingFollowUpItems,
+    overdueFollowUpItems,
+  } = dashboard;
 
   if (loading) {
     return (
@@ -131,17 +120,17 @@ function Dashboard() {
 
         <div className="dashboard-card">
           <span className="dashboard-card-label">
-            New
+            Udah Saya Chat
           </span>
 
           <strong className="dashboard-card-value">
-            {newCustomers}
+            {followCustomers}
           </strong>
         </div>
 
         <div className="dashboard-card">
           <span className="dashboard-card-label">
-            Contacted
+            Customer Balas
           </span>
 
           <strong className="dashboard-card-value">
@@ -151,31 +140,21 @@ function Dashboard() {
 
         <div className="dashboard-card">
           <span className="dashboard-card-label">
-            Follow Up
+            Sudah Survei
           </span>
 
           <strong className="dashboard-card-value">
-            {followUpCustomers}
+            {surveyCustomers}
           </strong>
         </div>
 
         <div className="dashboard-card">
           <span className="dashboard-card-label">
-            Converted
+            Berhasil Pinjam
           </span>
 
           <strong className="dashboard-card-value">
-            {convertedCustomers}
-          </strong>
-        </div>
-
-        <div className="dashboard-card">
-          <span className="dashboard-card-label">
-            Closed
-          </span>
-
-          <strong className="dashboard-card-value">
-            {closedCustomers}
+            {topupCustomers}
           </strong>
         </div>
 
@@ -186,6 +165,26 @@ function Dashboard() {
 
           <strong className="dashboard-card-value">
             {totalFollowUps}
+          </strong>
+        </div>
+
+        <div className="dashboard-card">
+          <span className="dashboard-card-label">
+            Upcoming Follow-ups
+          </span>
+
+          <strong className="dashboard-card-value">
+            {upcomingFollowUps}
+          </strong>
+        </div>
+
+        <div className="dashboard-card">
+          <span className="dashboard-card-label">
+            Overdue Follow-ups
+          </span>
+
+          <strong className="dashboard-card-value">
+            {overdueFollowUps}
           </strong>
         </div>
       </div>
@@ -203,8 +202,10 @@ function Dashboard() {
             >
               <div>
                 <strong>
-                  {followUp.note}
+                  {followUp.customer_name || "Customer"}
                 </strong>
+
+                <p>{followUp.note}</p>
 
                 <p>
                   Follow-up date:{" "}
@@ -213,6 +214,46 @@ function Dashboard() {
                         followUp.follow_up_date
                       ).toLocaleDateString()
                     : "-"}
+                </p>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="customer-list">
+        <h2>Upcoming Follow-ups</h2>
+
+        {upcomingFollowUpItems.length === 0 ? (
+          <p>No upcoming follow-ups scheduled.</p>
+        ) : (
+          upcomingFollowUpItems.map((followUp) => (
+            <div key={followUp.id} className="detail-item">
+              <div>
+                <strong>{followUp.customer_name || "Customer"}</strong>
+                <p>{followUp.note}</p>
+                <p>
+                  Due: {new Date(followUp.follow_up_date).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="customer-list">
+        <h2>Overdue Follow-ups</h2>
+
+        {overdueFollowUpItems.length === 0 ? (
+          <p>No overdue follow-ups.</p>
+        ) : (
+          overdueFollowUpItems.map((followUp) => (
+            <div key={followUp.id} className="detail-item">
+              <div>
+                <strong>{followUp.customer_name || "Customer"}</strong>
+                <p>{followUp.note}</p>
+                <p>
+                  Due: {new Date(followUp.follow_up_date).toLocaleDateString()}
                 </p>
               </div>
             </div>

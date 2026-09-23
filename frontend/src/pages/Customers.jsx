@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import { getCustomers } from "../services/customerApi";
 import CustomerCard from "../components/CustomerCard";
+import { OUTREACH_STATUSES } from "../constants/outreachStatus";
 
 function Customers() {
   const navigate = useNavigate();
@@ -113,11 +114,11 @@ function Customers() {
           onChange={handleStatusChange}
         >
           <option value="">All Status</option>
-          <option value="new">New</option>
-          <option value="contacted">Contacted</option>
-          <option value="follow-up">Follow Up</option>
-          <option value="converted">Converted</option>
-          <option value="closed">Closed</option>
+          {OUTREACH_STATUSES.map((outreachStatus) => (
+            <option key={outreachStatus.value} value={outreachStatus.value}>
+              {outreachStatus.label}
+            </option>
+          ))}
         </select>
       </div>
 

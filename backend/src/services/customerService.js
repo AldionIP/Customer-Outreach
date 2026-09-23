@@ -104,6 +104,7 @@ const createCustomer = async ({
   phone,
   email,
   address,
+  status,
 }) => {
   const result = await pool.query(
     `
@@ -111,9 +112,10 @@ const createCustomer = async ({
         name,
         phone,
         email,
-        address
+        address,
+        status
       )
-      VALUES ($1, $2, $3, $4)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING
         id,
         name,
@@ -129,6 +131,7 @@ const createCustomer = async ({
       phone,
       email || null,
       address || null,
+      status || "follow",
     ]
   );
 

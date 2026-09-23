@@ -227,6 +227,318 @@
   color: #a00;
 }
 
+.success-message {
+  margin-bottom: 20px;
+  padding: 12px;
+  border: 1px solid #b7d7b0;
+  border-radius: 6px;
+  background-color: #edf8ee;
+  color: #1d5e2a;
+}
+
+.import-preview {
+  margin-top: 24px;
+}
+
+.whatsapp-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.whatsapp-panel {
+  max-width: none;
+}
+
+.whatsapp-preview {
+  min-height: 180px;
+}
+
+.whatsapp-preview-card {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid #e1e1e1;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.whatsapp-preview-card p {
+  margin: 6px 0;
+}
+
+.whatsapp-preview-box {
+  margin-top: 16px;
+  padding: 18px;
+  border-radius: 12px;
+  background: #f8f8f8;
+  border: 1px solid #d7d7d7;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.whatsapp-variable-list ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.whatsapp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.whatsapp-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.disabled-link {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.learning-book-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.learning-book-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.learning-book-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  padding: 14px;
+  cursor: pointer;
+}
+
+.learning-book-item.active {
+  border-color: #222;
+  background: #f7f7f7;
+}
+
+.learning-book-item small {
+  color: #666;
+  line-height: 1.5;
+}
+
+.learning-book-code {
+  font-size: 12px;
+  font-weight: bold;
+  color: #555;
+}
+
+.learning-book-header {
+  margin-bottom: 16px;
+}
+
+.learning-book-badge {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #f1f1f1;
+  font-weight: bold;
+}
+
+.learning-book-summary {
+  margin-bottom: 16px;
+  color: #444;
+}
+
+.learning-book-progress {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 20px 0 12px;
+  color: #666;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.learning-book-reading-card {
+  max-width: 780px;
+  min-height: 460px;
+  margin: 0 auto;
+  padding: 32px 36px;
+  border: 1px solid #e1e1e1;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(32, 33, 36, 0.06);
+}
+
+.learning-book-reading-card h3 {
+  margin: 8px 0 18px;
+  font-size: 28px;
+  line-height: 1.25;
+}
+
+.learning-book-reading-card h4 {
+  margin: 24px 0 8px;
+  font-size: 15px;
+}
+
+.learning-book-reading-text,
+.learning-book-explanation p,
+.learning-book-project-example p {
+  line-height: 1.6;
+}
+
+.learning-book-reading-card pre {
+  overflow-x: auto;
+  margin: 12px 0;
+  padding: 18px;
+  border-radius: 6px;
+  background: #202124;
+  color: #f1f3f4;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre;
+}
+
+.learning-book-callout,
+.learning-book-explanation,
+.learning-book-project-example {
+  margin-top: 20px;
+  padding: 14px 16px;
+  border-left: 3px solid #222;
+  background: #f7f7f7;
+}
+
+.learning-book-callout p,
+.learning-book-explanation p,
+.learning-book-project-example p {
+  margin: 6px 0 0;
+}
+
+.learning-book-section-number {
+  display: block;
+  margin-bottom: 8px;
+  color: #777;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.learning-book-navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+@media (max-width: 900px) {
+  .learning-book-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.import-section {
+  margin-top: 20px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.table-wrapper table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-wrapper th,
+.table-wrapper td {
+  border: 1px solid #ddd;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.table-wrapper th {
+  background-color: #f6f6f6;
+}
+
+.report-controls {
+  margin-bottom: 24px;
+}
+
+.report-control-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.report-control-grid .form-group {
+  margin-bottom: 0;
+}
+
+.report-period-summary {
+  margin-top: 20px;
+  padding: 12px 14px;
+  border-left: 3px solid #222;
+  background: #f7f7f7;
+}
+
+.report-status-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin: 20px 0 0;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.report-status-filter legend {
+  padding: 0 6px;
+  font-weight: bold;
+}
+
+.status-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.report-results {
+  padding-bottom: 20px;
+}
+
+.report-results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.report-results-header h2 {
+  margin: 0;
+}
+
+.report-table-wrapper {
+  margin-top: 20px;
+}
+
+.report-table-wrapper table {
+  min-width: 980px;
+}
+
 /* Responsive */
 
 @media (max-width: 768px) {
@@ -254,6 +566,30 @@
 
   .navbar-menu {
     gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .report-control-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .learning-book-progress {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .learning-book-reading-card {
+    min-height: 0;
+    padding: 24px 20px;
+  }
+
+  .learning-book-reading-card h3 {
+    font-size: 24px;
+  }
+
+  .learning-book-navigation button {
+    min-height: 44px;
   }
 }
 

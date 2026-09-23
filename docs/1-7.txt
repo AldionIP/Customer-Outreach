@@ -1,0 +1,127 @@
+MILESTONE 1-7
+LEARNING BOOK
+
+1. TUJUAN
+
+Pada milestone ini dibuat fitur Learning Book untuk membantu developer baru memahami project secara bertahap.
+
+Fitur yang selesai:
+- Dokumentasi milestone per tahap pengembangan
+- Halaman frontend untuk menavigasi dokumen milestone
+- Ringkasan project yang menjelaskan alur actual implementation
+- Contoh alur frontend → backend → database → response
+
+Alur utama:
+
+User
+  ↓
+Frontend React
+  ↓
+learningBookEntries
+  ↓
+LearningBook page
+  ↓
+Milestone content
+
+2. MENGAPA FITUR INI PENTING
+
+Project Customer Outreach sudah berkembang menjadi aplikasi yang lebih kompleks.
+Developer baru perlu memahami:
+- apa yang sudah dibangun,
+- mengapa fitur dibuat,
+- file-file yang terlibat,
+- alur data dari UI ke API dan ke database,
+- cara kerja endpoint yang penting.
+
+Learning Book membantu proses onboarding tanpa harus membaca seluruh source code sekaligus.
+
+3. FILE YANG TERLIBAT
+
+Frontend:
+- frontend/src/pages/LearningBook.jsx
+- frontend/src/data/learningBook.js
+- frontend/src/App.jsx
+- frontend/src/components/Navbar.jsx
+
+Dokumen:
+- docs/1-1.txt
+- docs/1-2.txt
+- docs/1-3.txt
+- docs/1-4.txt
+- docs/1-5.txt
+- docs/1-6.txt
+- docs/1-7.txt
+
+4. FRONTEND
+
+Halaman Learning Book menggunakan data array.
+Setiap item berisi:
+- id milestone
+- judul milestone
+- ringkasan
+- daftar section
+
+State yang dipakai:
+
+const [selectedId, setSelectedId] = useState("1-7");
+
+Saat user mengklik milestone lain, React mengganti selectedId dan menampilkan dokumen yang dipilih.
+
+5. PENTINGNYA JAVASCRIPT
+
+Beberapa syntax yang dipakai:
+- const / useState
+- array .find()
+- array .map()
+- conditional rendering
+- object data structure
+- JavaScript template strings
+
+Contoh:
+
+const selectedEntry = learningBookEntries.find(
+  (entry) => entry.id === selectedId
+) || learningBookEntries[0];
+
+6. ALUR DATA
+
+User membuka halaman Learning Book.
+↓
+Klik milestone tertentu.
+↓
+React memperbarui state.
+↓
+Komponen menampilkan konten milestone.
+↓
+Tidak ada request backend karena isi dokumen bersifat statis.
+
+7. API DAN DATABASE
+
+Untuk milestone ini tidak ada endpoint backend baru yang diperlukan.
+
+Tujuan Learning Book adalah dokumentasi internal.
+Karena itu:
+- tidak ada database migration baru,
+- tidak ada perubahan schema,
+- tidak ada API write operation.
+
+8. CONTOH
+
+Misalnya user memilih milestone 1-5.
+
+Maka halaman menampilkan ringkasan:
+"Follow-up history and outreach activity."
+
+Lalu memaparkan informasi seperti:
+- apa yang dibangun,
+- mengapa fitur dibuat,
+- file yang terlibat,
+- endpoint penting,
+- alur frontend → backend → database,
+- contoh nyata penggunaan.
+
+9. HASIL
+
+Learning Book menjadi cara yang sederhana untuk memahami project tanpa harus membaca semua file sekaligus.
+
+Dokumentasi ini mengikuti implementasi yang benar-benar ada di project, bukan teori umum.

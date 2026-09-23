@@ -1,5 +1,31 @@
 const customerService = require("../services/customerService");
 
+const VALID_CUSTOMER_STATUSES = new Set([
+  "follow",
+  "contacted",
+  "survey",
+  "topup",
+]);
+
+const normalizeText = (value) =>
+  typeof value === "string" ? value.trim() : "";
+
+const isValidEmail = (email) => {
+  if (!email) return true;
+
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+    String(email).trim()
+  );
+};
+
+const isValidUuid = (value) => {
+  if (typeof value !== "string") return false;
+
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value.trim()
+  );
+};
+
 const getCustomers = async (req, res) => {
   try {
     const {
@@ -8,6 +34,12 @@ const getCustomers = async (req, res) => {
       page = 1,
       limit = 10,
     } = req.query;
+
+    if (status && !VALID_CUSTOMER_STATUSES.has(status)) {
+      return res.status(400).json({
+        message: "Status must be one of: follow, contacted, survey, topup",
+      });
+    }
 
     const parsedPage = Number(page);
     const parsedLimit = Number(limit);
@@ -53,6 +85,12 @@ const getCustomerById = async (req, res) => {
   try {
     const { id } = req.params;
 
+    if (!isValidUuid(id)) {
+      return res.status(400).json({
+        message: "Invalid customer ID",
+      });
+    }
+
     const customer =
       await customerService.getCustomerById(id);
 
@@ -81,20 +119,50 @@ const createCustomer = async (req, res) => {
       phone,
       email,
       address,
+      status,
     } = req.body;
 
-    if (!name || !phone) {
+    const trimmedName = normalizeText(name);
+    const trimmedPhone = normalizeText(phone);
+    const trimmedEmail = normalizeText(email);
+    const trimmedAddress = normalizeText(address);
+    const trimmedStatus = normalizeText(status);
+
+    if (!trimmedName) {
       return res.status(400).json({
-        message: "Name and phone are required",
+        message: "Name is required",
+      });
+    }
+
+    if (!trimmedPhone) {
+      return res.status(400).json({
+        message: "Phone is required",
+      });
+    }
+
+    if (trimmedEmail && !isValidEmail(trimmedEmail)) {
+      return res.status(400).json({
+        message: "Email format is invalid",
+      });
+    }
+
+    if (
+      trimmedStatus &&
+      !VALID_CUSTOMER_STATUSES.has(trimmedStatus)
+    ) {
+      return res.status(400).json({
+        message:
+          "Status must be one of: follow, contacted, survey, topup",
       });
     }
 
     const customer =
       await customerService.createCustomer({
-        name,
-        phone,
-        email,
-        address,
+        name: trimmedName,
+        phone: trimmedPhone,
+        email: trimmedEmail || null,
+        address: trimmedAddress || null,
+        status: trimmedStatus || "follow",
       });
 
     res.status(201).json({
@@ -114,6 +182,12 @@ const updateCustomer = async (req, res) => {
   try {
     const { id } = req.params;
 
+    if (!isValidUuid(id)) {
+      return res.status(400).json({
+        message: "Invalid customer ID",
+      });
+    }
+
     const {
       name,
       phone,
@@ -122,19 +196,56 @@ const updateCustomer = async (req, res) => {
       status,
     } = req.body;
 
-    if (!name || !phone) {
+    const trimmedName = normalizeText(name);
+    const trimmedPhone = normalizeText(phone);
+    const trimmedEmail = normalizeText(email);
+    const trimmedAddress = normalizeText(address);
+    const trimmedStatus = normalizeText(status);
+
+    if (!trimmedName) {
       return res.status(400).json({
-        message: "Name and phone are required",
+        message: "Name is required",
+      });
+    }
+
+    if (!trimmedPhone) {
+      return res.status(400).json({
+        message: "Phone is required",
+      });
+    }
+
+    if (trimmedEmail && !isValidEmail(trimmedEmail)) {
+      return res.status(400).json({
+        message: "Email format is invalid",
+      });
+    }
+
+    if (
+      trimmedStatus &&
+      !VALID_CUSTOMER_STATUSES.has(trimmedStatus)
+    ) {
+      return res.status(400).json({
+        message:
+          "Status must be one of: follow, contacted, survey, topup",
+      });
+    }
+
+    const existingCustomer =
+      await customerService.getCustomerById(id);
+
+    if (!existingCustomer) {
+      return res.status(404).json({
+        message: "Customer not found",
       });
     }
 
     const customer =
       await customerService.updateCustomer(id, {
-        name,
-        phone,
-        email,
-        address,
-        status: status || "new",
+        name: trimmedName,
+        phone: trimmedPhone,
+        email: trimmedEmail || null,
+        address: trimmedAddress || null,
+        status: trimmedStatus || existingCustomer.status,
       });
 
     if (!customer) {
@@ -159,6 +270,12 @@ const updateCustomer = async (req, res) => {
 const deleteCustomer = async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!isValidUuid(id)) {
+      return res.status(400).json({
+        message: "Invalid customer ID",
+      });
+    }
 
     const deletedCustomer =
       await customerService.deleteCustomer(id);

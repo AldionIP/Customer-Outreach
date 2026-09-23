@@ -16,6 +16,22 @@ function Navbar() {
           <Link to="/customers" className="navbar-link">
             Customers
           </Link>
+
+          <Link to="/customers/import" className="navbar-link">
+            Import
+          </Link>
+
+          <Link to="/outreach/whatsapp" className="navbar-link">
+            WhatsApp
+          </Link>
+
+          <Link to="/reports" className="navbar-link">
+            Report
+          </Link>
+
+          <Link to="/learning-book" className="navbar-link">
+            Learning Book
+          </Link>
         </div>
       </div>
     </nav>

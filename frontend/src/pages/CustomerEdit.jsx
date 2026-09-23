@@ -5,6 +5,7 @@ import {
   getCustomerById,
   updateCustomer,
 } from "../services/customerApi";
+import { OUTREACH_STATUSES } from "../constants/outreachStatus";
 
 function CustomerEdit() {
   const { id } = useParams();
@@ -15,7 +16,7 @@ function CustomerEdit() {
     phone: "",
     email: "",
     address: "",
-    status: "new",
+    status: "follow",
   });
 
   const [loading, setLoading] = useState(true);
@@ -32,7 +33,7 @@ function CustomerEdit() {
           phone: data.phone || "",
           email: data.email || "",
           address: data.address || "",
-          status: data.status || "new",
+          status: data.status || "follow",
         });
       } catch (error) {
         console.error("Failed to fetch customer:", error);
@@ -189,11 +190,11 @@ function CustomerEdit() {
               value={formData.status}
               onChange={handleChange}
             >
-              <option value="new">New</option>
-              <option value="contacted">Contacted</option>
-              <option value="follow-up">Follow Up</option>
-              <option value="converted">Converted</option>
-              <option value="closed">Closed</option>
+              {OUTREACH_STATUSES.map((outreachStatus) => (
+                <option key={outreachStatus.value} value={outreachStatus.value}>
+                  {outreachStatus.label}
+                </option>
+              ))}
             </select>
           </div>
 

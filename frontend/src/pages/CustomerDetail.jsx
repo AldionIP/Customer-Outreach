@@ -1,13 +1,20 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { getCustomerById } from "../services/customerApi";
+import {
+  getCustomerById,
+  updateCustomer,
+} from "../services/customerApi";
 import {
   getFollowUpsByCustomerId,
   createFollowUp,
   updateFollowUp,
   deleteFollowUp,
 } from "../services/followUpApi";
+import {
+  OUTREACH_STATUSES,
+  getOutreachStatusLabel,
+} from "../constants/outreachStatus";
 
 function CustomerDetail() {
   const { id } = useParams();
@@ -88,6 +95,15 @@ function CustomerDetail() {
           newFollowUp,
           ...currentFollowUps,
         ]);
+
+        if (!customer || customer.status === "follow") {
+          const nextStatus = followUpDate ? "survey" : "contacted";
+          const updatedCustomer = await updateCustomer(id, {
+            ...customer,
+            status: nextStatus,
+          });
+          setCustomer(updatedCustomer);
+        }
       }
 
       setNote("");
@@ -95,6 +111,25 @@ function CustomerDetail() {
     } catch (error) {
       console.error("Failed to save follow-up:", error);
       setFollowUpError("Failed to save follow-up.");
+    }
+  };
+
+  const handleStatusChange = async (nextStatus) => {
+    if (!customer) {
+      return;
+    }
+
+    try {
+      const updatedCustomer = await updateCustomer(id, {
+        ...customer,
+        status: nextStatus,
+      });
+
+      setCustomer(updatedCustomer);
+      setError("");
+    } catch (error) {
+      console.error("Failed to update status:", error);
+      setError("Failed to update customer status.");
     }
   };
 
@@ -208,7 +243,7 @@ function CustomerDetail() {
             <h2>{customer.name}</h2>
 
             <span className="customer-status">
-              {customer.status || "new"}
+              {getOutreachStatusLabel(customer.status)}
             </span>
           </div>
         </div>
@@ -249,9 +284,20 @@ function CustomerDetail() {
               Status
             </span>
 
-            <span className="detail-value">
-              {customer.status || "new"}
-            </span>
+            <div className="detail-value">
+              <select
+                value={customer.status || "follow"}
+                onChange={(event) =>
+                  handleStatusChange(event.target.value)
+                }
+              >
+                {OUTREACH_STATUSES.map((outreachStatus) => (
+                  <option key={outreachStatus.value} value={outreachStatus.value}>
+                    {outreachStatus.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -323,6 +369,44 @@ function CustomerDetail() {
             </div>
           </div>
         </form>
+
+        {!editingId && (
+          <div className="detail-content">
+            <div className="detail-item">
+              <span className="detail-label">Quick status</span>
+              <div>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => handleStatusChange("contacted")}
+                >
+                  Customer Balas
+                </button>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => handleStatusChange("follow")}
+                >
+                  Udah Saya Chat
+                </button>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => handleStatusChange("survey")}
+                >
+                  Sudah Survei
+                </button>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => handleStatusChange("topup")}
+                >
+                  Berhasil Pinjam
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="detail-content">
           <h3>Follow-up History</h3>

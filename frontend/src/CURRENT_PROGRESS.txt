@@ -1,0 +1,38 @@
+CUSTOMER OUTREACH — CURRENT PROGRESS
+
+LAST COMPLETED:
+- Customer CRUD
+- Follow-up CRUD
+- Search/filter/pagination
+- Customer detail/edit
+- Basic Dashboard
+- Database schema verification
+- Backend validation and error handling
+- Dashboard API
+- Frontend dashboard API integration
+- CSV/Excel customer import
+- Outreach / WhatsApp workflow
+- Learning Book milestone documentation in Indonesian
+- WhatsApp phone normalization and prefilled message fix for Web/Desktop links
+
+CURRENT TASK:
+Final validation and integration check
+
+COMPLETED IN CURRENT TASK:
+- [x] Implemented message templates and variable replacement
+- [x] Added customer selection and WhatsApp message preview
+- [x] Added Open WhatsApp action with generated message
+- [x] Wired outreach route and navigation into the app
+- [x] Verified the frontend build and message-generation logic
+- [x] Reworked the Learning Book to reflect all milestone docs in correct order and Bahasa Indonesia
+- [x] Reworked the Learning Book reading area into sequential lessons/pages
+- [x] Added lesson progress and Previous/Next navigation across milestone boundaries
+- [x] Added book-style reading layout, callouts, readable code blocks, and mobile-safe spacing
+
+NEXT TASK:
+Manual browser verification of Report and Learning Book on desktop/mobile
+
+IMPORTANT:
+Do not redo completed work.
+Only continue from CURRENT TASK.
+Update this file when a task is completed.
