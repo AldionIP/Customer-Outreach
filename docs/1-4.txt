@@ -1,0 +1,601 @@
+CUSTOMER OUTREACH
+Dokumentasi Milestone 1-4
+Frontend Customer CRUD & Dashboard
+
+
+1. TUJUAN
+
+Pada milestone ini, frontend Customer Outreach dikembangkan agar dapat melakukan operasi CRUD terhadap data customer yang tersimpan di PostgreSQL.
+
+CRUD terdiri dari:
+
+- Create  = menambahkan customer
+- Read    = menampilkan customer
+- Update  = mengubah customer
+- Delete  = menghapus customer
+
+Selain CRUD, dibuat juga Dashboard Summary untuk menampilkan jumlah customer berdasarkan status.
+
+
+2. FRONTEND YANG DIGUNAKAN
+
+Frontend menggunakan:
+
+- React
+- Vite
+- JavaScript
+- React Router
+- Axios
+- CSS
+
+Struktur frontend saat ini:
+
+frontend/src/
+├── components/
+│   ├── CustomerCard.jsx
+│   └── Navbar.jsx
+│
+├── pages/
+│   ├── Dashboard.jsx
+│   ├── Customers.jsx
+│   ├── CustomerForm.jsx
+│   ├── CustomerDetail.jsx
+│   └── CustomerEdit.jsx
+│
+├── services/
+│   └── customerApi.js
+│
+├── App.jsx
+├── App.css
+├── index.css
+└── main.jsx
+
+
+3. CUSTOMER LIST
+
+Halaman Customers mengambil data customer dari backend menggunakan:
+
+getCustomers()
+
+Function tersebut berada di:
+
+frontend/src/services/customerApi.js
+
+Request yang dikirim:
+
+GET /api/customers
+
+Backend mengembalikan:
+
+{
+  data: customers
+}
+
+Frontend kemudian menyimpan data tersebut ke state:
+
+const [customers, setCustomers] = useState([]);
+
+Setelah data diterima:
+
+setCustomers(data);
+
+Data kemudian ditampilkan menggunakan:
+
+customers.map(...)
+
+
+4. CUSTOMER CARD
+
+Setiap customer ditampilkan menggunakan component:
+
+CustomerCard.jsx
+
+Component menerima data melalui props:
+
+<CustomerCard
+  customer={customer}
+/>
+
+CustomerCard menampilkan:
+
+- Nama
+- Nomor telepon
+- Email
+- Alamat
+- Status
+
+Status menggunakan fallback:
+
+customer.status || "new"
+
+Artinya jika status kosong, frontend akan menampilkan "new".
+
+
+5. CREATE CUSTOMER
+
+Untuk membuat customer baru digunakan:
+
+CustomerForm.jsx
+
+Form memiliki input:
+
+- name
+- phone
+- email
+- address
+
+Data form disimpan menggunakan useState:
+
+const [formData, setFormData] = useState({
+  name: "",
+  phone: "",
+  email: "",
+  address: "",
+});
+
+Ketika user mengetik, function handleChange dijalankan.
+
+Bagian penting:
+
+const { name, value } = event.target;
+
+setFormData((previousData) => ({
+  ...previousData,
+  [name]: value,
+}));
+
+Spread operator (...) digunakan agar data yang sebelumnya sudah ada tidak hilang.
+
+Contoh:
+
+Jika sebelumnya:
+
+{
+  name: "Budi",
+  phone: "08123"
+}
+
+Kemudian phone diubah, hanya phone yang diperbarui sementara name tetap dipertahankan.
+
+
+6. SUBMIT CREATE
+
+Ketika form dikirim:
+
+handleSubmit()
+
+menjalankan:
+
+createCustomer(formData)
+
+Function createCustomer menggunakan Axios:
+
+axios.post(API_URL, customerData)
+
+Request yang dikirim:
+
+POST /api/customers
+
+Setelah berhasil, user diarahkan kembali ke:
+
+/customers
+
+
+7. CUSTOMER DETAIL
+
+Halaman:
+
+CustomerDetail.jsx
+
+digunakan untuk melihat informasi lengkap satu customer.
+
+ID customer diambil dari URL menggunakan:
+
+const { id } = useParams();
+
+Contoh URL:
+
+/customers/123
+
+Maka:
+
+id = "123"
+
+Frontend kemudian menjalankan:
+
+getCustomerById(id)
+
+Request:
+
+GET /api/customers/:id
+
+
+8. EDIT CUSTOMER
+
+Halaman:
+
+CustomerEdit.jsx
+
+digunakan untuk mengubah data customer.
+
+Saat halaman dibuka, frontend terlebih dahulu mengambil data customer berdasarkan ID.
+
+Flow:
+
+GET /api/customers/:id
+        ↓
+getCustomerById(id)
+        ↓
+setFormData(...)
+        ↓
+form menampilkan data customer
+
+Form edit memiliki:
+
+- name
+- phone
+- email
+- address
+- status
+
+Status memiliki beberapa pilihan:
+
+- new
+- contacted
+- follow-up
+- converted
+- closed
+
+Ketika tombol Update Customer ditekan:
+
+updateCustomer(id, formData)
+
+akan mengirim:
+
+PUT /api/customers/:id
+
+
+9. DELETE CUSTOMER
+
+Delete dilakukan dari:
+
+CustomerCard.jsx
+
+Ketika tombol Delete ditekan, frontend meminta konfirmasi menggunakan:
+
+window.confirm()
+
+Jika user membatalkan:
+
+return;
+
+Jika user menyetujui:
+
+deleteCustomer(customer.id)
+
+Function tersebut mengirim:
+
+DELETE /api/customers/:id
+
+Setelah backend berhasil menghapus data, CustomerCard memanggil:
+
+onDelete(customer.id);
+
+
+10. PARENT-CHILD COMMUNICATION
+
+Pada fitur Delete digunakan konsep komunikasi antara parent dan child component.
+
+Customers.jsx adalah parent.
+
+CustomerCard.jsx adalah child.
+
+Customers.jsx mengirim function:
+
+<CustomerCard
+  customer={customer}
+  onDelete={handleDelete}
+/>
+
+CustomerCard kemudian menjalankan:
+
+onDelete(customer.id);
+
+Parent menerima ID customer yang sudah dihapus.
+
+Kemudian state diperbarui:
+
+setCustomers((previousCustomers) =>
+  previousCustomers.filter(
+    (customer) => customer.id !== customerId
+  )
+);
+
+Function filter() membuat array baru tanpa customer yang sudah dihapus.
+
+Keuntungannya:
+
+- Tidak perlu refresh browser
+- Tidak perlu mengambil ulang seluruh data
+- UI langsung diperbarui setelah delete berhasil
+
+
+11. LOADING STATE
+
+Frontend menggunakan state loading untuk menunjukkan bahwa data sedang diproses.
+
+Contoh:
+
+const [loading, setLoading] = useState(true);
+
+Ketika proses selesai:
+
+setLoading(false);
+
+Contoh tampilan:
+
+Loading customers...
+
+Loading state penting agar user mengetahui bahwa aplikasi sedang mengambil data.
+
+
+12. ERROR HANDLING
+
+Frontend juga memiliki error state:
+
+const [error, setError] = useState("");
+
+Jika request gagal:
+
+setError("Failed to load customers.");
+
+Kemudian frontend menampilkan pesan error kepada user.
+
+Try/catch digunakan untuk menangani error dari API:
+
+try {
+  ...
+} catch (error) {
+  ...
+} finally {
+  ...
+}
+
+finally digunakan agar loading selalu dihentikan setelah proses selesai.
+
+
+13. DASHBOARD SUMMARY
+
+Dashboard.jsx sekarang mengambil data customer dari backend menggunakan:
+
+getCustomers()
+
+Kemudian data dihitung berdasarkan status.
+
+Total customer:
+
+const totalCustomers = customers.length;
+
+Jumlah customer baru:
+
+const newCustomers = customers.filter(
+  (customer) =>
+    (customer.status || "new") === "new"
+).length;
+
+
+Jumlah contacted:
+
+const contactedCustomers = customers.filter(
+  (customer) =>
+    customer.status === "contacted"
+).length;
+
+
+Jumlah follow-up:
+
+const followUpCustomers = customers.filter(
+  (customer) =>
+    customer.status === "follow-up"
+).length;
+
+
+Jumlah converted:
+
+const convertedCustomers = customers.filter(
+  (customer) =>
+    customer.status === "converted"
+).length;
+
+
+Jumlah closed:
+
+const closedCustomers = customers.filter(
+  (customer) =>
+    customer.status === "closed"
+).length;
+
+
+14. KONSEP FILTER
+
+Method filter() digunakan untuk mengambil data berdasarkan kondisi tertentu.
+
+Contoh:
+
+const convertedCustomers = customers.filter(
+  (customer) =>
+    customer.status === "converted"
+);
+
+Jika terdapat:
+
+Budi  -> new
+Andi  -> contacted
+Siti  -> converted
+Rudi  -> converted
+
+Maka filter hanya mengambil:
+
+Siti
+Rudi
+
+Kemudian:
+
+.length
+
+digunakan untuk mengetahui jumlah datanya.
+
+Hasil:
+
+2
+
+
+15. ALUR SISTEM
+
+Create:
+
+User mengisi form
+      ↓
+CustomerForm.jsx
+      ↓
+createCustomer()
+      ↓
+Axios POST
+      ↓
+Backend
+      ↓
+PostgreSQL
+      ↓
+Customer berhasil dibuat
+
+
+Read:
+
+Customers.jsx
+      ↓
+getCustomers()
+      ↓
+Axios GET
+      ↓
+Backend
+      ↓
+PostgreSQL
+      ↓
+Data customer
+      ↓
+CustomerCard.jsx
+
+
+Detail:
+
+User klik View
+      ↓
+/customers/:id
+      ↓
+CustomerDetail.jsx
+      ↓
+getCustomerById(id)
+      ↓
+Backend
+      ↓
+PostgreSQL
+      ↓
+Data customer
+
+
+Update:
+
+User klik Edit
+      ↓
+CustomerEdit.jsx
+      ↓
+getCustomerById(id)
+      ↓
+Form terisi
+      ↓
+User mengubah data
+      ↓
+updateCustomer()
+      ↓
+Axios PUT
+      ↓
+Backend
+      ↓
+PostgreSQL
+
+
+Delete:
+
+User klik Delete
+      ↓
+window.confirm()
+      ↓
+deleteCustomer(id)
+      ↓
+Axios DELETE
+      ↓
+Backend
+      ↓
+PostgreSQL
+      ↓
+onDelete(id)
+      ↓
+setCustomers()
+      ↓
+Card dihapus dari UI
+
+
+16. ROUTING
+
+React Router digunakan untuk berpindah halaman.
+
+Route yang tersedia:
+
+/                       -> Dashboard
+/customers              -> Customer List
+/customers/new          -> Add Customer
+/customers/:id          -> Customer Detail
+/customers/:id/edit     -> Edit Customer
+
+
+17. API SERVICE
+
+Semua komunikasi frontend dengan backend customer dipusatkan di:
+
+frontend/src/services/customerApi.js
+
+Function yang tersedia:
+
+getCustomers()
+getCustomerById(id)
+createCustomer(customerData)
+updateCustomer(id, customerData)
+deleteCustomer(id)
+
+Tujuannya agar kode API tidak ditulis berulang-ulang di setiap component.
+
+
+18. HASIL MILESTONE
+
+Setelah milestone ini, frontend sudah memiliki:
+
+[✓] Customer List
+[✓] Customer Detail
+[✓] Add Customer
+[✓] Edit Customer
+[✓] Delete Customer
+[✓] Customer Status
+[✓] Loading State
+[✓] Error Handling
+[✓] Dashboard Summary
+[✓] React Router
+[✓] Axios API Service
+
+Frontend sekarang sudah dapat melakukan CRUD customer secara penuh melalui backend API dan PostgreSQL.
+
+
+19. GIT COMMIT
+
+Milestone ini akan disimpan menggunakan commit:
+
+feat: complete customer frontend CRUD and dashboard

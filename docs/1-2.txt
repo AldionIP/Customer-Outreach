@@ -1,0 +1,556 @@
+# CUSTOMER OUTREACH DASHBOARD
+
+## Milestone 1-2 — Customer Listing dan Create Customer
+
+### 1. Tujuan
+
+Pada milestone ini kita membuat API untuk:
+
+1. Mengambil seluruh data customer.
+2. Menambahkan customer baru.
+
+API menggunakan arsitektur sederhana:
+
+Frontend → Route → Controller → Service → PostgreSQL
+
+---
+
+## 2. Endpoint GET Customer
+
+Endpoint:
+
+GET /api/customers
+
+Endpoint ini digunakan untuk mengambil seluruh customer yang tersimpan di database.
+
+Contoh response:
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid-customer",
+      "name": "Budi Santoso",
+      "phone": "08123456789",
+      "email": "budi@example.com",
+      "address": "Tangerang",
+      "status": "new",
+      "created_at": "2026-09-23T00:00:00.000Z",
+      "updated_at": "2026-09-23T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+## 3. Route
+
+File:
+
+backend/src/routes/customerRoutes.js
+
+Kode:
+
+```js
+router.get("/", getCustomers);
+```
+
+Route tersebut berarti:
+
+GET /api/customers
+
+akan menjalankan function `getCustomers`.
+
+Route tidak langsung berkomunikasi dengan database.
+
+Alurnya:
+
+GET /api/customers
+↓
+customerRoutes.js
+↓
+getCustomers
+↓
+customerService.getAllCustomers()
+↓
+PostgreSQL
+↓
+Response JSON
+
+---
+
+## 4. Controller GET Customer
+
+File:
+
+backend/src/controllers/customerController.js
+
+Kode utama:
+
+```js
+const getCustomers = async (req, res) => {
+  try {
+    const customers = await customerService.getAllCustomers();
+
+    res.status(200).json({
+      data: customers,
+    });
+  } catch (error) {
+    console.error("Get customers error:", error);
+
+    res.status(500).json({
+      message: "Failed to get customers",
+    });
+  }
+};
+```
+
+### Penjelasan
+
+`async`
+
+Digunakan karena function melakukan proses asynchronous ke database.
+
+`await`
+
+Digunakan untuk menunggu hasil dari:
+
+```js
+customerService.getAllCustomers()
+```
+
+`res.status(200)`
+
+Menandakan request berhasil.
+
+`res.json()`
+
+Mengirim response dalam format JSON.
+
+`try...catch`
+
+Digunakan untuk menangani error ketika proses database gagal.
+
+---
+
+## 5. Service GET Customer
+
+File:
+
+backend/src/services/customerService.js
+
+Kode:
+
+```js
+const getAllCustomers = async () => {
+  const result = await pool.query(`
+    SELECT
+      id,
+      name,
+      phone,
+      email,
+      address,
+      status,
+      created_at,
+      updated_at
+    FROM customers
+    ORDER BY created_at DESC
+  `);
+
+  return result.rows;
+};
+```
+
+Service bertanggung jawab terhadap komunikasi dengan database.
+
+Query:
+
+```sql
+SELECT
+  id,
+  name,
+  phone,
+  email,
+  address,
+  status,
+  created_at,
+  updated_at
+FROM customers
+ORDER BY created_at DESC;
+```
+
+`SELECT`
+
+Digunakan untuk mengambil data.
+
+`FROM customers`
+
+Menentukan tabel yang digunakan.
+
+`ORDER BY created_at DESC`
+
+Mengurutkan customer berdasarkan waktu dibuat dari yang terbaru ke yang terlama.
+
+---
+
+# 6. Endpoint POST Customer
+
+Endpoint:
+
+POST /api/customers
+
+Digunakan untuk membuat customer baru.
+
+Contoh request:
+
+```json
+{
+  "name": "Budi Santoso",
+  "phone": "08123456789",
+  "email": "budi@example.com",
+  "address": "Tangerang"
+}
+```
+
+---
+
+## 7. Route POST
+
+File:
+
+backend/src/routes/customerRoutes.js
+
+Kode:
+
+```js
+router.post("/", createCustomer);
+```
+
+Artinya:
+
+POST /api/customers
+
+akan menjalankan:
+
+```js
+createCustomer
+```
+
+---
+
+## 8. Controller POST
+
+Kode:
+
+```js
+const createCustomer = async (req, res) => {
+  try {
+    const {
+      name,
+      phone,
+      email,
+      address,
+    } = req.body;
+
+    if (!name || !phone) {
+      return res.status(400).json({
+        message: "Name and phone are required",
+      });
+    }
+
+    const customer = await customerService.createCustomer({
+      name,
+      phone,
+      email,
+      address,
+    });
+
+    res.status(201).json({
+      message: "Customer created successfully",
+      data: customer,
+    });
+  } catch (error) {
+    console.error("Create customer error:", error);
+
+    res.status(500).json({
+      message: "Failed to create customer",
+    });
+  }
+};
+```
+
+### `req.body`
+
+Digunakan untuk mengambil data yang dikirim client.
+
+Contohnya:
+
+```js
+req.body.name
+req.body.phone
+```
+
+Karena menggunakan destructuring, kita dapat menulis:
+
+```js
+const {
+  name,
+  phone,
+  email,
+  address,
+} = req.body;
+```
+
+---
+
+## 9. Validasi
+
+Kode:
+
+```js
+if (!name || !phone) {
+  return res.status(400).json({
+    message: "Name and phone are required",
+  });
+}
+```
+
+Artinya customer wajib memiliki:
+
+* name
+* phone
+
+Jika salah satu kosong, server mengembalikan HTTP 400.
+
+HTTP 400 berarti request dari client tidak memenuhi kebutuhan API.
+
+---
+
+## 10. Service POST
+
+Kode:
+
+```js
+const createCustomer = async ({
+  name,
+  phone,
+  email,
+  address,
+}) => {
+  const result = await pool.query(
+    `
+      INSERT INTO customers (
+        name,
+        phone,
+        email,
+        address
+      )
+      VALUES ($1, $2, $3, $4)
+      RETURNING
+        id,
+        name,
+        phone,
+        email,
+        address,
+        status,
+        created_at,
+        updated_at
+    `,
+    [
+      name,
+      phone,
+      email || null,
+      address || null,
+    ]
+  );
+
+  return result.rows[0];
+};
+```
+
+Query menggunakan:
+
+```sql
+INSERT INTO customers
+```
+
+untuk memasukkan data baru.
+
+---
+
+## 11. `$1`, `$2`, `$3`, `$4`
+
+Contoh:
+
+```sql
+VALUES ($1, $2, $3, $4)
+```
+
+Kemudian nilainya diberikan melalui array:
+
+```js
+[
+  name,
+  phone,
+  email || null,
+  address || null,
+]
+```
+
+Cara ini disebut parameterized query.
+
+Tujuannya antara lain untuk memisahkan SQL dengan nilai input user dan membantu mencegah SQL Injection.
+
+---
+
+## 12. `RETURNING`
+
+Query menggunakan:
+
+```sql
+RETURNING
+  id,
+  name,
+  phone,
+  email,
+  address,
+  status,
+  created_at,
+  updated_at
+```
+
+Artinya PostgreSQL langsung mengembalikan data customer yang baru dibuat.
+
+Jadi backend tidak perlu melakukan SELECT kedua untuk mendapatkan customer tersebut.
+
+---
+
+## 13. `email || null`
+
+Kode:
+
+```js
+email || null
+```
+
+Jika email memiliki nilai:
+
+```text
+budi@example.com
+```
+
+maka nilai tersebut disimpan.
+
+Jika email kosong atau undefined, maka yang dikirim ke database adalah:
+
+```js
+null
+```
+
+Hal yang sama dilakukan terhadap address.
+
+---
+
+## 14. Status HTTP
+
+GET berhasil:
+
+```text
+200 OK
+```
+
+POST berhasil:
+
+```text
+201 Created
+```
+
+Validasi gagal:
+
+```text
+400 Bad Request
+```
+
+Server/database error:
+
+```text
+500 Internal Server Error
+```
+
+---
+
+## 15. Struktur Arsitektur
+
+```text
+Client
+  │
+  ▼
+Route
+  │
+  ▼
+Controller
+  │
+  ▼
+Service
+  │
+  ▼
+PostgreSQL
+```
+
+Contoh POST:
+
+```text
+POST /api/customers
+        │
+        ▼
+customerRoutes.js
+        │
+        ▼
+createCustomer()
+        │
+        ▼
+customerService.createCustomer()
+        │
+        ▼
+INSERT INTO customers
+        │
+        ▼
+PostgreSQL
+```
+
+---
+
+## 16. Testing
+
+Contoh POST menggunakan PowerShell:
+
+```powershell
+Invoke-RestMethod `
+  -Uri "http://localhost:5000/api/customers" `
+  -Method POST `
+  -ContentType "application/json" `
+  -Body '{"name":"Budi Santoso","phone":"08123456789","email":"budi@example.com","address":"Tangerang"}'
+```
+
+Untuk mengambil semua customer:
+
+```powershell
+Invoke-RestMethod `
+  -Uri "http://localhost:5000/api/customers" `
+  -Method GET
+```
+
+---
+
+## 17. Kesimpulan
+
+Pada milestone 1-2, backend sudah dapat:
+
+* mengambil seluruh customer;
+* membuat customer baru;
+* melakukan validasi name dan phone;
+* menyimpan data ke PostgreSQL;
+* mengembalikan data dalam format JSON.
+
+Milestone berikutnya akan menambahkan operasi terhadap customer tertentu berdasarkan UUID serta operasi update dan delete.

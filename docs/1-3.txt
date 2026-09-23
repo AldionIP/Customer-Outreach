@@ -1,0 +1,748 @@
+# CUSTOMER OUTREACH DASHBOARD
+
+## Milestone 1-3 — Read Detail, Update, dan Delete Customer
+
+### 1. Tujuan
+
+Pada milestone ini kita menambahkan tiga operasi Customer:
+
+1. Mengambil satu customer berdasarkan ID.
+2. Mengubah data customer.
+3. Menghapus customer.
+
+Dengan demikian Customer API sudah memiliki operasi CRUD lengkap:
+
+```text
+CREATE → POST
+READ   → GET
+UPDATE → PUT
+DELETE → DELETE
+```
+
+---
+
+# 2. GET Customer by ID
+
+Endpoint:
+
+```text
+GET /api/customers/:id
+```
+
+Digunakan untuk mengambil satu customer berdasarkan UUID.
+
+Contoh:
+
+```text
+GET /api/customers/d8f8cfe9-f93b-4309-8d9b-082d36ef0e33
+```
+
+---
+
+## 3. Route GET by ID
+
+File:
+
+```text
+backend/src/routes/customerRoutes.js
+```
+
+Kode:
+
+```js
+router.get("/:id", getCustomerById);
+```
+
+`:id` disebut route parameter.
+
+Contohnya:
+
+```text
+/api/customers/123
+```
+
+Maka:
+
+```js
+req.params.id
+```
+
+akan berisi:
+
+```text
+123
+```
+
+Dalam project ini nilai tersebut merupakan UUID customer.
+
+---
+
+# 4. Controller GET by ID
+
+File:
+
+```text
+backend/src/controllers/customerController.js
+```
+
+Kode:
+
+```js
+const getCustomerById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const customer = await customerService.getCustomerById(id);
+
+    if (!customer) {
+      return res.status(404).json({
+        message: "Customer not found",
+      });
+    }
+
+    res.status(200).json({
+      data: customer,
+    });
+  } catch (error) {
+    console.error("Get customer by ID error:", error);
+
+    res.status(500).json({
+      message: "Failed to get customer",
+    });
+  }
+};
+```
+
+---
+
+## 5. `req.params`
+
+Kode:
+
+```js
+const { id } = req.params;
+```
+
+Digunakan untuk mengambil parameter dari URL.
+
+Contoh:
+
+```text
+/api/customers/d8f8cfe9-f93b-4309-8d9b-082d36ef0e33
+```
+
+Maka:
+
+```js
+id
+```
+
+berisi:
+
+```text
+d8f8cfe9-f93b-4309-8d9b-082d36ef0e33
+```
+
+---
+
+# 6. Status 404
+
+Kode:
+
+```js
+if (!customer) {
+  return res.status(404).json({
+    message: "Customer not found",
+  });
+}
+```
+
+Jika ID tidak ditemukan di database, server mengembalikan:
+
+```text
+404 Not Found
+```
+
+Ini berbeda dengan error server.
+
+404 berarti resource yang diminta tidak ditemukan.
+
+---
+
+# 7. Service GET by ID
+
+File:
+
+```text
+backend/src/services/customerService.js
+```
+
+Kode:
+
+```js
+const getCustomerById = async (id) => {
+  const result = await pool.query(
+    `
+      SELECT
+        id,
+        name,
+        phone,
+        email,
+        address,
+        status,
+        created_at,
+        updated_at
+      FROM customers
+      WHERE id = $1
+    `,
+    [id]
+  );
+
+  return result.rows[0];
+};
+```
+
+Query SQL:
+
+```sql
+SELECT
+  id,
+  name,
+  phone,
+  email,
+  address,
+  status,
+  created_at,
+  updated_at
+FROM customers
+WHERE id = $1;
+```
+
+`WHERE`
+
+Digunakan untuk memberikan kondisi.
+
+Contohnya:
+
+```sql
+WHERE id = $1
+```
+
+berarti hanya customer dengan ID tersebut yang diambil.
+
+---
+
+# 8. `result.rows[0]`
+
+Query PostgreSQL menghasilkan array pada:
+
+```js
+result.rows
+```
+
+Karena kita hanya mencari satu customer, kita mengambil data pertama:
+
+```js
+result.rows[0]
+```
+
+Jika customer ditemukan:
+
+```js
+{
+  id: "...",
+  name: "Budi Santoso"
+}
+```
+
+Jika tidak ditemukan:
+
+```js
+undefined
+```
+
+Nilai tersebut kemudian digunakan controller untuk menentukan apakah response harus 200 atau 404.
+
+---
+
+# 9. PUT Customer
+
+Endpoint:
+
+```text
+PUT /api/customers/:id
+```
+
+Digunakan untuk mengubah data customer.
+
+Contoh:
+
+```text
+PUT /api/customers/d8f8cfe9-f93b-4309-8d9b-082d36ef0e33
+```
+
+Request body:
+
+```json
+{
+  "name": "Budi Santoso",
+  "phone": "081298765432",
+  "email": "budi@example.com",
+  "address": "Rajeg, Tangerang",
+  "status": "contacted"
+}
+```
+
+---
+
+# 10. Route PUT
+
+Kode:
+
+```js
+router.put("/:id", updateCustomer);
+```
+
+Ketika request:
+
+```text
+PUT /api/customers/:id
+```
+
+diterima, Express menjalankan:
+
+```js
+updateCustomer
+```
+
+---
+
+# 11. Controller PUT
+
+Kode:
+
+```js
+const updateCustomer = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      name,
+      phone,
+      email,
+      address,
+      status,
+    } = req.body;
+
+    if (!name || !phone) {
+      return res.status(400).json({
+        message: "Name and phone are required",
+      });
+    }
+
+    const customer = await customerService.updateCustomer(id, {
+      name,
+      phone,
+      email,
+      address,
+      status: status || "new",
+    });
+
+    if (!customer) {
+      return res.status(404).json({
+        message: "Customer not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Customer updated successfully",
+      data: customer,
+    });
+  } catch (error) {
+    console.error("Update customer error:", error);
+
+    res.status(500).json({
+      message: "Failed to update customer",
+    });
+  }
+};
+```
+
+---
+
+# 12. Update Validation
+
+Sama seperti POST, PUT tetap memerlukan:
+
+```text
+name
+phone
+```
+
+Jika tidak ada:
+
+```js
+if (!name || !phone)
+```
+
+server memberikan:
+
+```text
+400 Bad Request
+```
+
+Hal ini menjaga agar data penting customer tidak kosong.
+
+---
+
+# 13. Default Status
+
+Kode:
+
+```js
+status: status || "new"
+```
+
+Artinya jika user tidak mengirim status, backend menggunakan:
+
+```text
+new
+```
+
+Contoh request tanpa status:
+
+```json
+{
+  "name": "Budi Santoso",
+  "phone": "08123456789"
+}
+```
+
+Backend akan menggunakan:
+
+```text
+status = "new"
+```
+
+---
+
+# 14. Service PUT
+
+Kode:
+
+```js
+const updateCustomer = async (
+  id,
+  {
+    name,
+    phone,
+    email,
+    address,
+    status,
+  }
+) => {
+  const result = await pool.query(
+    `
+      UPDATE customers
+      SET
+        name = $1,
+        phone = $2,
+        email = $3,
+        address = $4,
+        status = $5,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $6
+      RETURNING
+        id,
+        name,
+        phone,
+        email,
+        address,
+        status,
+        created_at,
+        updated_at
+    `,
+    [
+      name,
+      phone,
+      email || null,
+      address || null,
+      status,
+      id,
+    ]
+  );
+
+  return result.rows[0];
+};
+```
+
+Query utamanya:
+
+```sql
+UPDATE customers
+SET
+  name = $1,
+  phone = $2,
+  email = $3,
+  address = $4,
+  status = $5,
+  updated_at = CURRENT_TIMESTAMP
+WHERE id = $6;
+```
+
+---
+
+# 15. `UPDATE`
+
+SQL:
+
+```sql
+UPDATE customers
+```
+
+berarti kita ingin mengubah data pada tabel:
+
+```text
+customers
+```
+
+Bagian:
+
+```sql
+SET
+  name = $1,
+  phone = $2
+```
+
+menentukan nilai baru.
+
+Sedangkan:
+
+```sql
+WHERE id = $6
+```
+
+menentukan customer mana yang diubah.
+
+Tanpa `WHERE`, UPDATE dapat mengubah seluruh data dalam tabel.
+
+Karena itu `WHERE` sangat penting.
+
+---
+
+# 16. `updated_at`
+
+Ketika customer diperbarui:
+
+```sql
+updated_at = CURRENT_TIMESTAMP
+```
+
+digunakan untuk mencatat waktu perubahan terakhir.
+
+Contoh:
+
+```text
+created_at = waktu customer dibuat
+updated_at = waktu customer terakhir diubah
+```
+
+Dengan begitu kita dapat membedakan kapan data dibuat dan kapan terakhir diperbarui.
+
+---
+
+# 17. DELETE Customer
+
+Endpoint:
+
+```text
+DELETE /api/customers/:id
+```
+
+Digunakan untuk menghapus customer berdasarkan UUID.
+
+Contoh:
+
+```text
+DELETE /api/customers/385c88a2-c8ec-44a7-8126-a2cf6af7c6cb
+```
+
+---
+
+# 18. Route DELETE
+
+Kode:
+
+```js
+router.delete("/:id", deleteCustomer);
+```
+
+Ketika request DELETE diterima, Express menjalankan:
+
+```js
+deleteCustomer
+```
+
+---
+
+# 19. Controller DELETE
+
+Kode:
+
+```js
+const deleteCustomer = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedCustomer =
+      await customerService.deleteCustomer(id);
+
+    if (!deletedCustomer) {
+      return res.status(404).json({
+        message: "Customer not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Customer deleted successfully",
+      data: deletedCustomer,
+    });
+  } catch (error) {
+    console.error("Delete customer error:", error);
+
+    res.status(500).json({
+      message: "Failed to delete customer",
+    });
+  }
+};
+```
+
+---
+
+# 20. Service DELETE
+
+Kode:
+
+```js
+const deleteCustomer = async (id) => {
+  const result = await pool.query(
+    `
+      DELETE FROM customers
+      WHERE id = $1
+      RETURNING id
+    `,
+    [id]
+  );
+
+  return result.rows[0];
+};
+```
+
+Query:
+
+```sql
+DELETE FROM customers
+WHERE id = $1
+RETURNING id;
+```
+
+`WHERE id = $1`
+
+memastikan hanya customer dengan ID tersebut yang dihapus.
+
+---
+
+# 21. `RETURNING id`
+
+Setelah DELETE dilakukan, PostgreSQL mengembalikan ID data yang berhasil dihapus.
+
+Contoh:
+
+```json
+{
+  "id": "385c88a2-c8ec-44a7-8126-a2cf6af7c6cb"
+}
+```
+
+Jika ID tidak ditemukan, `result.rows[0]` tidak memiliki data sehingga controller memberikan response 404.
+
+---
+
+# 22. Testing DELETE
+
+Contoh menggunakan PowerShell:
+
+```powershell
+Invoke-RestMethod `
+  -Uri "http://localhost:5000/api/customers/385c88a2-c8ec-44a7-8126-a2cf6af7c6cb" `
+  -Method DELETE
+```
+
+Response berhasil:
+
+```json
+{
+  "message": "Customer deleted successfully",
+  "data": {
+    "id": "385c88a2-c8ec-44a7-8126-a2cf6af7c6cb"
+  }
+}
+```
+
+---
+
+# 23. Kesalahan Saat Testing
+
+Pada proses testing, DELETE sempat dijalankan menggunakan placeholder:
+
+```text
+ID_CUSTOMER_TEST
+```
+
+Contoh tersebut bukan UUID customer sebenarnya.
+
+API kemudian gagal karena ID tersebut tidak ditemukan atau tidak sesuai dengan tipe UUID.
+
+Setelah menggunakan UUID sebenarnya:
+
+```text
+385c88a2-c8ec-44a7-8126-a2cf6af7c6cb
+```
+
+DELETE berhasil.
+
+Pelajaran penting:
+
+Placeholder dalam contoh command harus diganti dengan nilai sebenarnya.
+
+---
+
+# 24. CRUD API Lengkap
+
+Setelah milestone ini, Customer API memiliki:
+
+| Method | Endpoint             | Fungsi                   |
+| ------ | -------------------- | ------------------------ |
+| GET    | `/api/customers`     | Mengambil semua customer |
+| GET    | `/api/customers/:id` | Mengambil satu customer  |
+| POST   | `/api/customers`     | Membuat customer         |
+| PUT    | `/api/customers/:id` | Mengubah customer        |
+| DELETE | `/api/customers/:id` | Menghapus customer       |
+
+---
+
+# 25. Alur GET by ID
+
+```text
+Client
+  │
+  │ GET /api/customers/:id
+  ▼
+Route
+  │
+  ▼
+Controller
+  │
+  ▼
+Servic
+```
