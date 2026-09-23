@@ -1,19 +1,49 @@
 const pool = require("../config/database");
 
-const getAllCustomers = async () => {
-  const result = await pool.query(`
-    SELECT
-      id,
-      name,
-      phone,
-      email,
-      address,
-      status,
-      created_at,
-      updated_at
-    FROM customers
-    ORDER BY created_at DESC
-  `);
+const getAllCustomers = async ({ search, status } = {}) => {
+  const values = [];
+  const conditions = [];
+
+  if (search) {
+    values.push(`%${search}%`);
+
+    conditions.push(`
+      (
+        name ILIKE $${values.length}
+        OR phone ILIKE $${values.length}
+        OR email ILIKE $${values.length}
+      )
+    `);
+  }
+
+  if (status) {
+    values.push(status);
+
+    conditions.push(`status = $${values.length}`);
+  }
+
+  const whereClause =
+    conditions.length > 0
+      ? `WHERE ${conditions.join(" AND ")}`
+      : "";
+
+  const result = await pool.query(
+    `
+      SELECT
+        id,
+        name,
+        phone,
+        email,
+        address,
+        status,
+        created_at,
+        updated_at
+      FROM customers
+      ${whereClause}
+      ORDER BY created_at DESC
+    `,
+    values
+  );
 
   return result.rows;
 };

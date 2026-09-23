@@ -8,13 +8,21 @@ function Customers() {
   const navigate = useNavigate();
 
   const [customers, setCustomers] = useState([]);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchCustomers = async () => {
+      setLoading(true);
+      setError("");
+
       try {
-        const data = await getCustomers();
+        const data = await getCustomers({
+          search,
+          status,
+        });
 
         setCustomers(data);
       } catch (error) {
@@ -30,7 +38,7 @@ function Customers() {
     };
 
     fetchCustomers();
-  }, []);
+  }, [search, status]);
 
   const handleDelete = (customerId) => {
     setCustomers((previousCustomers) =>
@@ -38,6 +46,14 @@ function Customers() {
         (customer) => customer.id !== customerId
       )
     );
+  };
+
+  const handleSearchChange = (event) => {
+    setSearch(event.target.value);
+  };
+
+  const handleStatusChange = (event) => {
+    setStatus(event.target.value);
   };
 
   return (
@@ -56,6 +72,27 @@ function Customers() {
         >
           Add Customer
         </button>
+      </div>
+
+      <div className="customer-filters">
+        <input
+          type="text"
+          placeholder="Search customer..."
+          value={search}
+          onChange={handleSearchChange}
+        />
+
+        <select
+          value={status}
+          onChange={handleStatusChange}
+        >
+          <option value="">All Status</option>
+          <option value="new">New</option>
+          <option value="contacted">Contacted</option>
+          <option value="follow_up">Follow Up</option>
+          <option value="converted">Converted</option>
+          <option value="lost">Lost</option>
+        </select>
       </div>
 
       {loading && (

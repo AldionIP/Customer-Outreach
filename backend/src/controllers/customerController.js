@@ -2,7 +2,12 @@ const customerService = require("../services/customerService");
 
 const getCustomers = async (req, res) => {
   try {
-    const customers = await customerService.getAllCustomers();
+    const { search, status } = req.query;
+
+    const customers = await customerService.getAllCustomers({
+      search,
+      status,
+    });
 
     res.status(200).json({
       data: customers,
