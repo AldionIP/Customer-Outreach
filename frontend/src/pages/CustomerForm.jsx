@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import { createCustomer } from "../services/customerApi";
 
 function CustomerForm() {
@@ -32,11 +33,9 @@ function CustomerForm() {
 
     try {
       await createCustomer(formData);
-
       navigate("/customers");
-    } catch (error) {
-      console.error("Failed to create customer:", error);
-
+    } catch (submitError) {
+      console.error("Failed to create customer:", submitError);
       setError("Failed to create customer.");
     } finally {
       setLoading(false);
@@ -45,96 +44,44 @@ function CustomerForm() {
 
   return (
     <div className="page-container">
-      <div className="form-container">
-        <div className="form-header">
-          <h1>Add Customer</h1>
-          <p>Create a new customer.</p>
+      <div className="mx-auto max-w-3xl panel p-6 sm:p-8">
+        <div className="mb-6">
+          <span className="hud-label">
+            <span className="status-dot" />
+            Add New Customer
+          </span>
+          <h1 className="mt-4 text-3xl font-semibold text-slate-50">Create Mission Profile</h1>
+          <p className="mt-2 text-sm text-slate-300">Register a new contact into the outreach pipeline.</p>
         </div>
 
-        {error && (
-          <div className="error-message">
-            {error}
-          </div>
-        )}
+        {error && <div className="error-message">{error}</div>}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="form-group">
-            <label htmlFor="name">
-              Name
-            </label>
-
-            <input
-              id="name"
-              name="name"
-              type="text"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Enter customer name"
-              required
-            />
+            <label htmlFor="name">Name</label>
+            <input id="name" name="name" type="text" value={formData.name} onChange={handleChange} placeholder="Enter customer name" required />
           </div>
 
           <div className="form-group">
-            <label htmlFor="phone">
-              Phone
-            </label>
-
-            <input
-              id="phone"
-              name="phone"
-              type="text"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="Enter phone number"
-              required
-            />
+            <label htmlFor="phone">Phone</label>
+            <input id="phone" name="phone" type="text" value={formData.phone} onChange={handleChange} placeholder="Enter phone number" required />
           </div>
 
           <div className="form-group">
-            <label htmlFor="email">
-              Email
-            </label>
-
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter email address"
-            />
+            <label htmlFor="email">Email</label>
+            <input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="Enter email address" />
           </div>
 
           <div className="form-group">
-            <label htmlFor="address">
-              Address
-            </label>
-
-            <textarea
-              id="address"
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              placeholder="Enter customer address"
-              rows="4"
-            />
+            <label htmlFor="address">Address</label>
+            <textarea id="address" name="address" value={formData.address} onChange={handleChange} placeholder="Enter customer address" rows="4" />
           </div>
 
-          <div className="form-actions">
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => navigate("/customers")}
-              disabled={loading}
-            >
+          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+            <button type="button" className="secondary-button" onClick={() => navigate("/customers")} disabled={loading}>
               Cancel
             </button>
-
-            <button
-              type="submit"
-              className="primary-button"
-              disabled={loading}
-            >
+            <button type="submit" className="primary-button" disabled={loading}>
               {loading ? "Saving..." : "Save Customer"}
             </button>
           </div>

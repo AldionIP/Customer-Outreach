@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import {
-  getCustomerById,
-  updateCustomer,
-} from "../services/customerApi";
 import { OUTREACH_STATUSES } from "../constants/outreachStatus";
+import { getCustomerById, updateCustomer } from "../services/customerApi";
 
 function CustomerEdit() {
   const { id } = useParams();
@@ -35,9 +32,8 @@ function CustomerEdit() {
           address: data.address || "",
           status: data.status || "follow",
         });
-      } catch (error) {
-        console.error("Failed to fetch customer:", error);
-
+      } catch (fetchError) {
+        console.error("Failed to fetch customer:", fetchError);
         setError("Failed to load customer.");
       } finally {
         setLoading(false);
@@ -64,11 +60,9 @@ function CustomerEdit() {
 
     try {
       await updateCustomer(id, formData);
-
       navigate(`/customers/${id}`);
-    } catch (error) {
-      console.error("Failed to update customer:", error);
-
+    } catch (submitError) {
+      console.error("Failed to update customer:", submitError);
       setError("Failed to update customer.");
     } finally {
       setSaving(false);
@@ -78,8 +72,8 @@ function CustomerEdit() {
   if (loading) {
     return (
       <div className="page-container">
-        <div className="customer-list">
-          <p>Loading customer...</p>
+        <div className="panel p-8 text-slate-200">
+          <p>Loading customer profile...</p>
         </div>
       </div>
     );
@@ -88,13 +82,9 @@ function CustomerEdit() {
   if (error && !formData.name) {
     return (
       <div className="page-container">
-        <div className="customer-list">
+        <div className="panel p-8 text-slate-200">
           <p>{error}</p>
-
-          <button
-            className="secondary-button"
-            onClick={() => navigate("/customers")}
-          >
+          <button type="button" className="secondary-button mt-4" onClick={() => navigate("/customers")}>
             Back to Customers
           </button>
         </div>
@@ -104,92 +94,42 @@ function CustomerEdit() {
 
   return (
     <div className="page-container">
-      <div className="form-container">
-        <div className="form-header">
-          <h1>Edit Customer</h1>
-          <p>Update customer information.</p>
+      <div className="mx-auto max-w-3xl panel p-6 sm:p-8">
+        <div className="mb-6">
+          <span className="hud-label">
+            <span className="status-dot" />
+            Edit Customer
+          </span>
+          <h1 className="mt-4 text-3xl font-semibold text-slate-50">Update Mission Data</h1>
+          <p className="mt-2 text-sm text-slate-300">Adjust customer profile and outreach status.</p>
         </div>
 
-        {error && (
-          <div className="error-message">
-            {error}
-          </div>
-        )}
+        {error && <div className="error-message">{error}</div>}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="form-group">
-            <label htmlFor="name">
-              Name
-            </label>
-
-            <input
-              id="name"
-              name="name"
-              type="text"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Enter customer name"
-              required
-            />
+            <label htmlFor="name">Name</label>
+            <input id="name" name="name" type="text" value={formData.name} onChange={handleChange} placeholder="Enter customer name" required />
           </div>
 
           <div className="form-group">
-            <label htmlFor="phone">
-              Phone
-            </label>
-
-            <input
-              id="phone"
-              name="phone"
-              type="text"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="Enter phone number"
-              required
-            />
+            <label htmlFor="phone">Phone</label>
+            <input id="phone" name="phone" type="text" value={formData.phone} onChange={handleChange} placeholder="Enter phone number" required />
           </div>
 
           <div className="form-group">
-            <label htmlFor="email">
-              Email
-            </label>
-
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter email address"
-            />
+            <label htmlFor="email">Email</label>
+            <input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="Enter email address" />
           </div>
 
           <div className="form-group">
-            <label htmlFor="address">
-              Address
-            </label>
-
-            <textarea
-              id="address"
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              placeholder="Enter customer address"
-              rows="4"
-            />
+            <label htmlFor="address">Address</label>
+            <textarea id="address" name="address" value={formData.address} onChange={handleChange} placeholder="Enter customer address" rows="4" />
           </div>
 
           <div className="form-group">
-            <label htmlFor="status">
-              Status
-            </label>
-
-            <select
-              id="status"
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-            >
+            <label htmlFor="status">Status</label>
+            <select id="status" name="status" value={formData.status} onChange={handleChange}>
               {OUTREACH_STATUSES.map((outreachStatus) => (
                 <option key={outreachStatus.value} value={outreachStatus.value}>
                   {outreachStatus.label}
@@ -198,23 +138,11 @@ function CustomerEdit() {
             </select>
           </div>
 
-          <div className="form-actions">
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() =>
-                navigate(`/customers/${id}`)
-              }
-              disabled={saving}
-            >
+          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+            <button type="button" className="secondary-button" onClick={() => navigate(`/customers/${id}`)} disabled={saving}>
               Cancel
             </button>
-
-            <button
-              type="submit"
-              className="primary-button"
-              disabled={saving}
-            >
+            <button type="submit" className="primary-button" disabled={saving}>
               {saving ? "Updating..." : "Update Customer"}
             </button>
           </div>
